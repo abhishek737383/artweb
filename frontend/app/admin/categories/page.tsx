@@ -24,6 +24,9 @@ import {
 import { categoryApi } from '../../lib/api/categories';
 import { Category } from '../../../types/category';
 
+// Define a type for category tree node
+type CategoryTreeNode = Category & { children: CategoryTreeNode[] };
+
 export default function AdminCategoriesPage() {
   const router = useRouter();
   
@@ -213,9 +216,9 @@ export default function AdminCategoriesPage() {
   });
 
   // Build category tree
-  const buildCategoryTree = (categoriesList: Category[]) => {
-    const categoryMap = new Map<string, Category & { children: Category[] }>();
-    const tree: (Category & { children: Category[] })[] = [];
+  const buildCategoryTree = (categoriesList: Category[]): CategoryTreeNode[] => {
+    const categoryMap = new Map<string, CategoryTreeNode>();
+    const tree: CategoryTreeNode[] = [];
 
     // Initialize all categories with children array
     categoriesList.forEach(category => {
@@ -246,7 +249,7 @@ export default function AdminCategoriesPage() {
 
   // Render category tree
   const renderCategoryTree = (
-    categoryTree: (Category & { children: Category[] })[],
+    categoryTree: CategoryTreeNode[],
     level: number = 0
   ) => {
     return categoryTree.map(category => {

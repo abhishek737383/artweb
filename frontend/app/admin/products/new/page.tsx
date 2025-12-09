@@ -9,12 +9,34 @@ import { Category } from '../../../../types/category';
 import { CreateProductDto, ProductImage } from '../../../../types/product';
 import { useRouter } from 'next/navigation';
 
+// Define a more specific type for the form data that ensures required fields
+type ProductFormData = {
+  name: string;
+  description: string;
+  shortDescription: string;
+  price: number;
+  compareAtPrice?: number;
+  costPrice?: number;
+  sku: string;
+  barcode: string;
+  stock: number;
+  weight?: number;
+  categoryId?: string;
+  tags: string[];
+  isActive: boolean;
+  isFeatured: boolean;
+  isBestSeller: boolean;
+  metaTitle: string;
+  metaDescription: string;
+  images: ProductImage[];
+};
+
 export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [formData, setFormData] = useState<CreateProductDto>({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
     shortDescription: '',
@@ -121,10 +143,10 @@ export default function NewProductPage() {
   // Handle tags
   const handleAddTag = () => {
     const tag = tagInput.trim();
-    if (tag && !formData.tags?.includes(tag)) {
+    if (tag && !formData.tags.includes(tag)) {
       setFormData(prev => ({
         ...prev,
-        tags: [...(prev.tags || []), tag],
+        tags: [...prev.tags, tag],
       }));
       setTagInput('');
     }
@@ -133,7 +155,7 @@ export default function NewProductPage() {
   const handleRemoveTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags?.filter(tag => tag !== tagToRemove) || [],
+      tags: prev.tags.filter(tag => tag !== tagToRemove),
     }));
   };
 
@@ -171,7 +193,7 @@ export default function NewProductPage() {
         setUploadingImages(false);
       }
 
-      // 2. Prepare product data
+      // 2. Prepare product data - only include defined values
       const productData: CreateProductDto = {
         name: formData.name,
         description: formData.description,
@@ -184,7 +206,7 @@ export default function NewProductPage() {
         stock: Number(formData.stock),
         weight: formData.weight ? Number(formData.weight) : undefined,
         categoryId: formData.categoryId || undefined,
-        tags: formData.tags || [],
+        tags: formData.tags,
         isActive: formData.isActive,
         isFeatured: formData.isFeatured,
         isBestSeller: formData.isBestSeller,
@@ -213,12 +235,20 @@ export default function NewProductPage() {
   };
 
   // Handle input changes
-  const handleInputChange = (field: keyof CreateProductDto, value: any) => {
+  const handleInputChange = (field: keyof ProductFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Handle number input changes with validation
+  const handleNumberChange = (field: keyof ProductFormData, value: string) => {
+    const numValue = value === '' ? 0 : parseFloat(value);
+    if (!isNaN(numValue)) {
+      handleInputChange(field, numValue);
     }
   };
 
@@ -303,7 +333,7 @@ export default function NewProductPage() {
                   Short Description
                 </label>
                 <textarea
-                  value={formData.shortDescription || ''}
+                  value={formData.shortDescription}
                   onChange={(e) => handleInputChange('shortDescription', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
@@ -345,7 +375,7 @@ export default function NewProductPage() {
                     min="0.01"
                     step="0.01"
                     value={formData.price}
-                    onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
+                    onChange={(e) => handleNumberChange('price', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.price ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -380,7 +410,7 @@ export default function NewProductPage() {
                     required
                     min="0"
                     value={formData.stock}
-                    onChange={(e) => handleInputChange('stock', parseInt(e.target.value) || 0)}
+                    onChange={(e) => handleNumberChange('stock', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.stock ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -512,7 +542,7 @@ export default function NewProductPage() {
               </button>
             </div>
 
-            {formData.tags && formData.tags.length > 0 && (
+            {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {formData.tags.map((tag, index) => (
                   <span
@@ -534,6 +564,41 @@ export default function NewProductPage() {
           </div>
         </div>
 
+        {/* Additional Information */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Additional Information</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Barcode
+              </label>
+              <input
+                type="text"
+                value={formData.barcode}
+                onChange={(e) => handleInputChange('barcode', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Product barcode"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Weight (grams)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={formData.weight || ''}
+                onChange={(e) => handleInputChange('weight', e.target.value ? parseFloat(e.target.value) : undefined)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Weight in grams"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* SEO */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">SEO Settings</h2>
@@ -545,7 +610,7 @@ export default function NewProductPage() {
               </label>
               <input
                 type="text"
-                value={formData.metaTitle || ''}
+                value={formData.metaTitle}
                 onChange={(e) => handleInputChange('metaTitle', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="SEO title for search engines"
@@ -557,7 +622,7 @@ export default function NewProductPage() {
                 Meta Description
               </label>
               <textarea
-                value={formData.metaDescription || ''}
+                value={formData.metaDescription}
                 onChange={(e) => handleInputChange('metaDescription', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 rows={3}

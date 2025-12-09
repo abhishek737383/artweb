@@ -15,6 +15,14 @@ import {
 import { categoryApi } from '../../../lib/api/categories';
 import { Category, CreateCategoryDto } from '../../../../types/category';
 
+// Define form data type locally to avoid type issues
+interface CategoryFormData {
+  name: string;
+  description: string;
+  parentId: string; // Changed from string | null | undefined
+  isActive: boolean;
+}
+
 export default function NewCategoryPage() {
   const router = useRouter();
   
@@ -22,11 +30,11 @@ export default function NewCategoryPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  // Form state
-  const [formData, setFormData] = useState<CreateCategoryDto>({
+  // Form state - using local interface
+  const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     description: '',
-    parentId: '',
+    parentId: '', // Initialize as empty string, not null/undefined
     isActive: true,
   });
   
@@ -110,9 +118,13 @@ export default function NewCategoryPage() {
       const categoryData: CreateCategoryDto & { imageFile?: File } = {
         name: formData.name,
         description: formData.description || '',
-        parentId: formData.parentId || undefined,
         isActive: formData.isActive,
       };
+
+      // Only include parentId if it's not empty
+      if (formData.parentId && formData.parentId.trim() !== '') {
+        categoryData.parentId = formData.parentId;
+      }
 
       // Add image file if exists
       if (imageFile) {
@@ -144,14 +156,32 @@ export default function NewCategoryPage() {
     }
   };
 
-  // Handle input changes
-  const handleInputChange = (field: keyof CreateCategoryDto, value: any) => {
+  // Handle input changes - properly typed
+  const handleInputChange = (field: keyof CategoryFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  // Handle text input changes
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    handleInputChange(name as keyof CategoryFormData, value);
+  };
+
+  // Handle select changes
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    handleInputChange(name as keyof CategoryFormData, value);
+  };
+
+  // Handle checkbox changes
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    handleInputChange(name as keyof CategoryFormData, checked);
   };
 
   return (
@@ -186,9 +216,10 @@ export default function NewCategoryPage() {
                   </label>
                   <input
                     type="text"
+                    name="name"
                     required
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={handleTextChange}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
                       errors.name ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -211,8 +242,9 @@ export default function NewCategoryPage() {
                     Parent Category
                   </label>
                   <select
+                    name="parentId"
                     value={formData.parentId}
-                    onChange={(e) => handleInputChange('parentId', e.target.value)}
+                    onChange={handleSelectChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">No Parent (Top-level Category)</option>
@@ -238,8 +270,9 @@ export default function NewCategoryPage() {
                     Description
                   </label>
                   <textarea
-                    value={formData.description || ''}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    name="description"
+                    value={formData.description}
+                    onChange={handleTextChange}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
                       errors.description ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -253,7 +286,7 @@ export default function NewCategoryPage() {
                     </p>
                   )}
                   <p className="mt-1 text-sm text-gray-500">
-                    {(formData.description?.length || 0)}/500 characters
+                    {formData.description.length}/500 characters
                   </p>
                 </div>
               </div>
@@ -322,8 +355,9 @@ export default function NewCategoryPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      name="isActive"
                       checked={formData.isActive}
-                      onChange={(e) => handleInputChange('isActive', e.target.checked)}
+                      onChange={handleCheckboxChange}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-300 transition-colors"></div>

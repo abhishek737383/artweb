@@ -12,7 +12,7 @@ export default function ProductForm({
   categories?: { id: string; name: string }[];
   onSubmit: (form: FormData) => Promise<void>;
 }) {
-  const [title, setTitle] = useState(initial?.title || '');
+  const [name, setName] = useState(initial?.name || ''); // Changed from title to name
   const [slug, setSlug] = useState(initial?.slug || '');
   const [price, setPrice] = useState(initial?.price || 0);
   const [description, setDescription] = useState(initial?.description || '');
@@ -27,7 +27,7 @@ export default function ProductForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const fd = new FormData();
-    fd.append('title', title);
+    fd.append('name', name); // Changed from title to name
     fd.append('slug', slug);
     fd.append('price', String(price));
     fd.append('description', description);
@@ -46,20 +46,44 @@ export default function ProductForm({
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="block text-sm">Title</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 p-2 border rounded w-full" />
+        <label className="block text-sm">Name</label> {/* Changed from Title to Name */}
+        <input 
+          value={name} 
+          onChange={(e) => setName(e.target.value)} 
+          className="mt-1 p-2 border rounded w-full" 
+          required
+        />
       </div>
       <div>
         <label className="block text-sm">Slug</label>
-        <input value={slug} onChange={(e) => setSlug(e.target.value)} className="mt-1 p-2 border rounded w-full" />
+        <input 
+          value={slug} 
+          onChange={(e) => setSlug(e.target.value)} 
+          className="mt-1 p-2 border rounded w-full" 
+          required
+        />
       </div>
       <div>
         <label className="block text-sm">Price</label>
-        <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="mt-1 p-2 border rounded w-full" />
+        <input 
+          type="number" 
+          value={price} 
+          onChange={(e) => setPrice(Number(e.target.value))} 
+          className="mt-1 p-2 border rounded w-full" 
+          required
+          min="0"
+          step="0.01"
+        />
       </div>
       <div>
         <label className="block text-sm">Category</label>
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="mt-1 p-2 border rounded w-full">
+        <select 
+          value={categoryId} 
+          onChange={(e) => setCategoryId(e.target.value)} 
+          className="mt-1 p-2 border rounded w-full"
+          required
+        >
+          <option value="">Select Category</option>
           {categories?.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
@@ -67,14 +91,32 @@ export default function ProductForm({
       </div>
       <div>
         <label className="block text-sm">Description</label>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="mt-1 p-2 border rounded w-full" />
+        <textarea 
+          value={description} 
+          onChange={(e) => setDescription(e.target.value)} 
+          className="mt-1 p-2 border rounded w-full" 
+          rows={4}
+          required
+        />
       </div>
       <div>
         <label className="block text-sm">Images (multiple)</label>
-        <input type="file" multiple onChange={(e) => setImages(e.target.files)} className="mt-1" />
+        <input 
+          type="file" 
+          multiple 
+          onChange={(e) => setImages(e.target.files)} 
+          className="mt-1" 
+          accept="image/*"
+        />
       </div>
       <div>
-        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
+        <button 
+          type="submit" 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50" 
+          disabled={loading}
+        >
+          {loading ? 'Saving...' : 'Save'}
+        </button>
       </div>
     </form>
   );

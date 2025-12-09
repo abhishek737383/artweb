@@ -8,6 +8,7 @@ type GetProductsParams = {
   categoryId?: string;
   isActive?: boolean;
   isFeatured?: boolean;
+  isBestSeller?: boolean;  // Add this line
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   minPrice?: number;

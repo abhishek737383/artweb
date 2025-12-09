@@ -17,7 +17,8 @@ import {
   Download,
   MoreVertical,
   CheckSquare,
-  Square
+  Square,
+  Loader2
 } from 'lucide-react';
 import { productApi } from '../../lib/api/products';
 import { categoryApi } from '../../lib/api/categories';
@@ -100,9 +101,12 @@ export default function AdminProductsPage() {
     }
   };
 
-  const toggleProductStatus = async (id: string, currentStatus: boolean) => {
+  const toggleProductStatus = async (productId: string, currentStatus: boolean) => {
     try {
-      await productApi.update(id, { isActive: !currentStatus });
+      const productToUpdate = products.find(p => p._id === productId);
+      if (!productToUpdate) return;
+      
+      await productApi.update(productId, { isActive: !currentStatus });
       loadProducts();
     } catch (error) {
       console.error('Status toggle error:', error);
@@ -114,15 +118,15 @@ export default function AdminProductsPage() {
     if (selectedProducts.length === products.length) {
       setSelectedProducts([]);
     } else {
-      setSelectedProducts(products.map(p => p.id));
+      setSelectedProducts(products.map(p => p._id || p.id));
     }
   };
 
-  const handleSelectProduct = (id: string) => {
+  const handleSelectProduct = (productId: string) => {
     setSelectedProducts(prev =>
-      prev.includes(id)
-        ? prev.filter(productId => productId !== id)
-        : [...prev, id]
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
     );
   };
 
@@ -228,7 +232,7 @@ export default function AdminProductsPage() {
               >
                 <option value="">All Categories</option>
                 {categories.map(category => (
-                  <option key={category.id} value={category.id}>
+                  <option key={category._id} value={category._id}>
                     {category.name}
                   </option>
                 ))}
@@ -356,12 +360,12 @@ export default function AdminProductsPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
+                    <tr key={product._id || product.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
-                          checked={selectedProducts.includes(product.id)}
-                          onChange={() => handleSelectProduct(product.id)}
+                          checked={selectedProducts.includes(product._id || product.id)}
+                          onChange={() => handleSelectProduct(product._id || product.id)}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </td>
@@ -442,7 +446,7 @@ export default function AdminProductsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => toggleProductStatus(product.id, product.isActive)}
+                            onClick={() => toggleProductStatus(product._id || product.id, product.isActive)}
                             className="text-gray-600 hover:text-gray-900 p-1"
                             title={product.isActive ? 'Deactivate' : 'Activate'}
                           >
@@ -453,14 +457,14 @@ export default function AdminProductsPage() {
                             )}
                           </button>
                           <Link
-                            href={`/admin/products/edit/${product.id}`}
+                            href={`/admin/products/edit/${product._id || product.id}`}
                             className="text-blue-600 hover:text-blue-900 p-1"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </Link>
                           <button
-                            onClick={() => handleDelete(product.id)}
+                            onClick={() => handleDelete(product._id || product.id)}
                             className="text-red-600 hover:text-red-900 p-1"
                             title="Delete"
                           >
