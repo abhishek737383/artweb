@@ -1,7 +1,6 @@
 [build]
-  base = "frontned"
-  publish = ".next"
-  command = "npm run build"
+  command = "npm run build --prefix frontend"
+  publish = "frontend/.next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
