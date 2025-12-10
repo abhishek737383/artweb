@@ -22,7 +22,7 @@ connectDB();
 // Middleware
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'artplazza.netlify.app',
+    process.env.FRONTEND_URL || 'https://artplazza.netlify.app/',
     'http://localhost:3000'
   ],
   credentials: true,
