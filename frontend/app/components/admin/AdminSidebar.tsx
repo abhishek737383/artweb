@@ -15,14 +15,29 @@ import {
   FileText,
   Image
 } from 'lucide-react';
+import { useAdminAuth } from '../../../hooks/useAdminAuth';
 
-import { useAdminAuth } from '../../../hooks/useAdminAuth'; // adjust path if required
+// Define types for better type safety
+interface NavItem {
+  title: string;
+  icon: any;
+  color: string;
+  href?: string;
+  subItems?: SubItem[];
+}
+
+interface SubItem {
+  title: string;
+  icon: any;
+  href: string;
+}
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { logout } = useAdminAuth();
 
-  const navigationItems = [
+  // Type-safe navigation items array
+  const navigationItems: NavItem[] = [
     { title: 'Dashboard', icon: LayoutDashboard, href: '/admin', color: 'gray' },
     { title: 'Products', icon: Package, color: 'blue', subItems: [
         { title: 'All Products', icon: List, href: '/admin/products' },
@@ -84,8 +99,7 @@ export default function AdminSidebar() {
 
         <nav className="space-y-1">
           {navigationItems.map((item, index) => {
-            const IconComponent = item.icon as any;
-            const isActive = item.href ? pathname === item.href : false;
+            const IconComponent = item.icon;
             const hasSubItems = !!item.subItems?.length;
 
             if (hasSubItems) {
@@ -100,7 +114,7 @@ export default function AdminSidebar() {
                   </div>
                   <div className="ml-4 pl-3 border-l border-gray-200 space-y-1">
                     {item.subItems!.map((subItem, subIndex) => {
-                      const SubIcon = subItem.icon as any;
+                      const SubIcon = subItem.icon;
                       const isSubActive = pathname === subItem.href;
                       return (
                         <Link
@@ -120,10 +134,14 @@ export default function AdminSidebar() {
               );
             }
 
+            // For items without subItems, we know href exists
+            const href = item.href!;
+            const isActive = pathname === href;
+
             return (
               <Link
                 key={index}
-                href={item.href}
+                href={href}
                 className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-all ${
                   isActive ? getActiveColorClasses(item.color) : `${getColorClasses(item.color)} hover:opacity-90`
                 }`}
