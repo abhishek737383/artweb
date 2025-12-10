@@ -16,64 +16,27 @@ import {
   Image
 } from 'lucide-react';
 
+import { useAdminAuth } from '../../../hooks/useAdminAuth'; // adjust path if required
+
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const { logout } = useAdminAuth();
 
   const navigationItems = [
-    { 
-      title: 'Dashboard', 
-      icon: LayoutDashboard, 
-      href: '/admin', 
-      color: 'gray' 
-    },
-    { 
-      title: 'Products', 
-      icon: Package, 
-      color: 'blue', 
-      subItems: [
+    { title: 'Dashboard', icon: LayoutDashboard, href: '/admin', color: 'gray' },
+    { title: 'Products', icon: Package, color: 'blue', subItems: [
         { title: 'All Products', icon: List, href: '/admin/products' },
         { title: 'Add Product', icon: PlusCircle, href: '/admin/products/new' }
-      ] 
-    },
-    { 
-      title: 'Categories', 
-      icon: FolderOpen, 
-      color: 'orange', 
-      subItems: [
+      ] },
+    { title: 'Categories', icon: FolderOpen, color: 'orange', subItems: [
         { title: 'All Categories', icon: List, href: '/admin/categories' },
         { title: 'Add Category', icon: PlusCircle, href: '/admin/categories/new' }
-      ] 
-    },
-    { 
-      title: 'Orders', 
-      icon: ShoppingCart, 
-      href: '/admin/orders', 
-      color: 'green' 
-    },
-    { 
-      title: 'Customers', 
-      icon: Users, 
-      href: '/admin/customers', 
-      color: 'purple' 
-    },
-    { 
-      title: 'Blogs', 
-      icon: FileText, 
-      href: '/admin/blogs', 
-      color: 'indigo' 
-    },
-    { 
-      title: 'Banners', 
-      icon: Image, 
-      href: '/admin/banners', 
-      color: 'cyan' 
-    },
-    { 
-      title: 'Settings', 
-      icon: Settings, 
-      href: '/admin/settings', 
-      color: 'gray' 
-    }
+      ] },
+    { title: 'Orders', icon: ShoppingCart, href: '/admin/orders', color: 'green' },
+    { title: 'Customers', icon: Users, href: '/admin/customers', color: 'purple' },
+    { title: 'Blogs', icon: FileText, href: '/admin/blogs', color: 'indigo' },
+    { title: 'Banners', icon: Image, href: '/admin/banners', color: 'cyan' },
+    { title: 'Settings', icon: Settings, href: '/admin/settings', color: 'gray' }
   ];
 
   const getColorClasses = (color: string) => {
@@ -121,7 +84,8 @@ export default function AdminSidebar() {
 
         <nav className="space-y-1">
           {navigationItems.map((item, index) => {
-            const IconComponent = item.icon;
+            const IconComponent = item.icon as any;
+            const isActive = item.href ? pathname === item.href : false;
             const hasSubItems = !!item.subItems?.length;
 
             if (hasSubItems) {
@@ -136,7 +100,7 @@ export default function AdminSidebar() {
                   </div>
                   <div className="ml-4 pl-3 border-l border-gray-200 space-y-1">
                     {item.subItems!.map((subItem, subIndex) => {
-                      const SubIcon = subItem.icon;
+                      const SubIcon = subItem.icon as any;
                       const isSubActive = pathname === subItem.href;
                       return (
                         <Link
@@ -156,43 +120,24 @@ export default function AdminSidebar() {
               );
             }
 
-            // Only render Link if href exists
-            if (item.href) {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={index}
-                  href={item.href}
-                  className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-all ${
-                    isActive ? getActiveColorClasses(item.color) : `${getColorClasses(item.color)} hover:opacity-90`
-                  }`}
-                >
-                  <IconComponent className="w-5 h-5" />
-                  <span className="font-medium">{item.title}</span>
-                </Link>
-              );
-            }
-
-            // Fallback for items without href and no subItems
             return (
-              <div
+              <Link
                 key={index}
-                className={`flex items-center space-x-3 px-3 py-3 rounded-lg ${getColorClasses(item.color)}`}
+                href={item.href}
+                className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-all ${
+                  isActive ? getActiveColorClasses(item.color) : `${getColorClasses(item.color)} hover:opacity-90`
+                }`}
               >
                 <IconComponent className="w-5 h-5" />
                 <span className="font-medium">{item.title}</span>
-              </div>
+              </Link>
             );
           })}
         </nav>
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <button
-            onClick={() => {
-              // Handle logout
-              console.log('Logout clicked');
-              window.location.href = '/login';
-            }}
+            onClick={() => logout()}
             className="flex items-center justify-center space-x-2 w-full px-3 py-3 text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all"
           >
             <LogOut className="w-5 h-5" />
