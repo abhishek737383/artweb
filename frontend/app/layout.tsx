@@ -5,7 +5,7 @@ import Footer from './components/ui/Footer';
 import { AuthProvider } from './components/contexts/AuthContext';
 
 export const metadata: Metadata = {
-  title: 'Art Palzaa - Premium Stationery',
+  title: 'Art plazaa  - Premium Stationery',
   description: 'Your one-stop shop for premium art supplies and stationery',
 };
 

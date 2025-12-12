@@ -153,7 +153,7 @@ export default function HomePage() {
             <div className="w-12 h-12 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin"></div>
           </div>
           <div className="mt-6 text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Art Palzaa</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Art plazaa </h2>
             <p className="text-gray-500">Loading premium experience...</p>
           </div>
         </div>
@@ -623,7 +623,7 @@ export default function HomePage() {
                 Ready to Create Your Masterpiece?
               </h2>
               <p className="text-gray-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-                Join thousands of artists who trust Art Palzaa for their premium art supplies.
+                Join thousands of artists who trust Art plazaa  for their premium art supplies.
                 Elevate your creativity with our curated collections.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -109,7 +109,7 @@ export default function Header() {
                   </div>
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  Art Palzaa
+                  Art plazaa 
                 </span>
               </Link>
             </div>

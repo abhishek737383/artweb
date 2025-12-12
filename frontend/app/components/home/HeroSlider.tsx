@@ -58,7 +58,7 @@
 //       <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-24 text-center rounded-lg">
 //         <div className="max-w-4xl mx-auto px-4">
 //           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-//             Welcome to Art Palzaa
+//             Welcome to Art plazaa 
 //           </h1>
 //           <p className="text-xl mb-8">
 //             Discover premium art supplies and stationery for your creative journey

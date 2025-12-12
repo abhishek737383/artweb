@@ -86,7 +86,7 @@ export const productApi = {
 
       const response = await apiGet<any>(`/products?${queryParams.toString()}`);
       
-      console.log('Products API response:', response); // Debug log
+      // console.log('Products API response:', response); // Debug log
       
       // Normalize response format
       let products: Product[] = [];

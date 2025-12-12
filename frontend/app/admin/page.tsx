@@ -147,7 +147,7 @@ export default function AdminDashboard() {
           Dashboard Overview
         </h1>
         <p className="text-gray-600">
-          Welcome back! Here's what's happening with your Art Palzaa store.
+          Welcome back! Here's what's happening with your Art plazaa  store.
         </p>
       </div>
 

@@ -1,122 +1,194 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Heart, ShoppingBag } from 'lucide-react';
+import { useState } from 'react';
+import { Star, Heart, ShoppingBag, Zap } from 'lucide-react';
 import { Product } from '../../../types/product';
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
+  isNew?: boolean; // Add optional isNew prop
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false, isNew = false }: ProductCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  
   const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+  const secondaryImage = product.images?.[1];
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount 
     ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
     : 0;
 
+  // Calculate if product is new based on createdAt date (less than 30 days old)
+  const isProductNew = isNew || (product.createdAt && 
+    (new Date().getTime() - new Date(product.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000
+  );
+
   return (
-    <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
-        <Link href={`/products/${product.slug}`}>
-          {primaryImage ? (
-            <Image
-              src={primaryImage.url}
-              alt={primaryImage.altText || product.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-              <ShoppingBag className="w-12 h-12 text-gray-400" />
+    <div 
+      className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Link 
+        href={`/products/${product.slug}`}
+        className="block"
+        prefetch={false}
+      >
+        <div className="relative aspect-square overflow-hidden bg-gray-100">
+          {/* Image with hover effect */}
+          {primaryImage && (
+            <>
+              <Image
+                src={primaryImage.url}
+                alt={primaryImage.altText || product.name}
+                fill
+                className={`object-cover transition-opacity duration-500 ${
+                  isHovered && secondaryImage ? 'opacity-0' : 'opacity-100'
+                }`}
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                priority={priority}
+                quality={75}
+                loading={priority ? "eager" : "lazy"}
+              />
+              {secondaryImage && (
+                <Image
+                  src={secondaryImage.url}
+                  alt={secondaryImage.altText || `${product.name} - Alternative view`}
+                  fill
+                  className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  quality={75}
+                  loading="lazy"
+                />
+              )}
+            </>
+          )}
+
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
+            {hasDiscount && (
+              <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
+                -{discountPercent}%
+              </span>
+            )}
+            {product.isBestSeller && (
+              <span className="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full shadow-lg">
+                🔥 Best Seller
+              </span>
+            )}
+            {isProductNew && (
+              <span className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-full shadow-lg">
+                NEW
+              </span>
+            )}
+          </div>
+
+          {/* Quick actions */}
+          <div className={`absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 ${
+            isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
+          }`}>
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                setIsLiked(!isLiked);
+              }}
+              className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
+            >
+              <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+            </button>
+          </div>
+
+          {/* Quick view overlay */}
+          {isHovered && (
+            <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center">
+              <div className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg text-sm font-medium">
+                Quick View
+              </div>
             </div>
           )}
-        </Link>
-
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {hasDiscount && (
-            <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-              {discountPercent}% OFF
-            </span>
-          )}
-          {product.isBestSeller && (
-            <span className="px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full">
-              Best Seller
-            </span>
-          )}
-          {product.isFeatured && (
-            <span className="px-2 py-1 bg-purple-500 text-white text-xs font-bold rounded-full">
-              Featured
-            </span>
-          )}
         </div>
-
-        {/* Quick actions */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
-            <Heart className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      </Link>
 
       <div className="p-4">
         {/* Category */}
         {product.category && (
           <Link 
             href={`/categories/${product.category.slug}`}
-            className="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+            className="text-xs font-medium text-gray-500 hover:text-purple-600 transition-colors block mb-1"
+            prefetch={false}
           >
             {product.category.name}
           </Link>
         )}
 
         {/* Product name */}
-        <Link href={`/products/${product.slug}`}>
-          <h3 className="font-semibold text-gray-900 mt-1 hover:text-blue-600 transition-colors line-clamp-1">
+        <Link href={`/products/${product.slug}`} prefetch={false}>
+          <h3 className="font-semibold text-gray-900 hover:text-purple-600 transition-colors line-clamp-1 mb-1">
             {product.name}
           </h3>
         </Link>
 
         {/* Rating */}
-        <div className="flex items-center mt-2">
+        <div className="flex items-center mb-3">
           <div className="flex">
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
                 key={star}
-                className="w-4 h-4 text-yellow-400 fill-current"
+                className="w-4 h-4 text-amber-400 fill-current"
               />
             ))}
           </div>
           <span className="text-sm text-gray-600 ml-1">4.8</span>
+          <span className="mx-2 text-gray-300">•</span>
+          <span className="text-sm text-gray-500">128 sold</span>
         </div>
 
         {/* Price */}
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
             <span className="text-lg font-bold text-gray-900">
               ₹{product.price.toLocaleString()}
             </span>
             {hasDiscount && (
-              <span className="text-sm text-gray-500 line-through">
+              <span className="text-sm text-gray-500 line-through ml-2">
                 ₹{product.compareAtPrice?.toLocaleString()}
               </span>
             )}
           </div>
 
-          <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-            Add to Cart
+          <button 
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              product.stock > 0
+                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+            }`}
+            disabled={product.stock === 0}
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Add
           </button>
         </div>
 
         {/* Stock status */}
         <div className="mt-3">
           {product.stock > 10 ? (
-            <span className="text-xs text-green-600">In Stock</span>
+            <div className="flex items-center text-green-600 text-sm">
+              <Zap className="w-3 h-3 mr-1" />
+              In Stock • Fast Delivery
+            </div>
           ) : product.stock > 0 ? (
-            <span className="text-xs text-yellow-600">Only {product.stock} left</span>
+            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
+              Only {product.stock} left
+            </span>
           ) : (
-            <span className="text-xs text-red-600">Out of Stock</span>
+            <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full">
+              Out of Stock
+            </span>
           )}
         </div>
       </div>

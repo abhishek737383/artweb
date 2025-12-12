@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Backend API for Art Palzaa E-commerce",
+  "description": "Backend API for Art plazaa  E-commerce",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
