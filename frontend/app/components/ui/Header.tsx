@@ -19,6 +19,17 @@ export default function Header() {
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Add preload for important pages
+  const [preloadedPages, setPreloadedPages] = useState<string[]>([]);
+
+  // Preload common pages on hover
+  const preloadPage = (href: string) => {
+    if (!preloadedPages.includes(href)) {
+      router.prefetch(href);
+      setPreloadedPages(prev => [...prev, href]);
+    }
+  };
+
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Products', href: '/products' },
@@ -40,7 +51,6 @@ export default function Header() {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check if click is outside mobile menu AND outside mobile menu button
       if (
         mobileMenuRef.current && 
         !mobileMenuRef.current.contains(event.target as Node) &&
@@ -64,7 +74,7 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
       setIsSearchOpen(false);
       setSearchQuery('');
     }
@@ -82,11 +92,6 @@ export default function Header() {
     setIsSearchOpen(false);
   };
 
-  const toggleMobileMenu = () => {
-    console.log('Toggle mobile menu called, current state:', isMobileMenuOpen);
-    setIsMobileMenuOpen(prev => !prev);
-  };
-
   return (
     <>
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
@@ -102,6 +107,7 @@ export default function Header() {
                 href="/" 
                 className="flex items-center space-x-2 group"
                 onClick={closeAllMenus}
+                prefetch={true}
               >
                 <div className="relative">
                   <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center transform group-hover:scale-105 transition-transform duration-300">
@@ -120,12 +126,14 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  onMouseEnter={() => preloadPage(item.href)}
                   className={`relative px-4 py-2 text-sm font-medium transition-all duration-300 group ${
                     pathname === item.href
                       ? 'text-indigo-600'
                       : 'text-gray-700 hover:text-indigo-600'
                   }`}
                   onClick={closeAllMenus}
+                  prefetch={item.name === 'Products' || item.name === 'Categories'}
                 >
                   {item.name}
                   {pathname === item.href && (
@@ -214,6 +222,7 @@ export default function Header() {
                           href="/profile"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-300"
                           onClick={() => setIsUserMenuOpen(false)}
+                          prefetch={true}
                         >
                           <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -224,6 +233,7 @@ export default function Header() {
                           href="/orders"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-300"
                           onClick={() => setIsUserMenuOpen(false)}
+                          prefetch={true}
                         >
                           <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -237,6 +247,7 @@ export default function Header() {
                             href="/admin"
                             className="flex items-center px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors duration-300"
                             onClick={() => setIsUserMenuOpen(false)}
+                            prefetch={true}
                           >
                             <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -266,6 +277,7 @@ export default function Header() {
                     href="/login" 
                     className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors duration-300"
                     onClick={closeAllMenus}
+                    prefetch={true}
                   >
                     Sign in
                   </Link>
@@ -273,6 +285,7 @@ export default function Header() {
                     href="/register" 
                     className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                     onClick={closeAllMenus}
+                    prefetch={true}
                   >
                     Get Started
                   </Link>
@@ -284,6 +297,7 @@ export default function Header() {
                 href="/wishlist" 
                 className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-xl transition-all duration-300 relative group"
                 onClick={closeAllMenus}
+                prefetch={true}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -298,6 +312,7 @@ export default function Header() {
                 href="/cart" 
                 className="p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-xl transition-all duration-300 relative group"
                 onClick={closeAllMenus}
+                prefetch={true}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -311,7 +326,7 @@ export default function Header() {
               <button
                 ref={mobileMenuButtonRef}
                 className="lg:hidden p-2.5 text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-xl transition-all duration-300"
-                onClick={toggleMobileMenu}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 <svg 
                   className={`w-6 h-6 transition-transform duration-300 ${isMobileMenuOpen ? 'rotate-90' : ''}`} 
@@ -375,19 +390,24 @@ export default function Header() {
                         ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
                         : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'
                     }`}
-                    onClick={closeAllMenus}
+                    onClick={() => {
+                      closeAllMenus();
+                      preloadPage(item.href);
+                    }}
+                    prefetch={item.name === 'Products' || item.name === 'Categories'}
                   >
                     {item.name}
                   </Link>
                 ))}
                 
-                {/* Mobile Auth Buttons - Only show if not logged in */}
+                {/* Mobile Auth Buttons */}
                 {!user && (
                   <div className="flex space-x-3 border-t border-gray-100 pt-4 mt-4">
                     <Link
                       href="/login"
                       className="flex-1 text-center bg-gray-900 text-white px-4 py-3 rounded-xl hover:bg-gray-800 transition-all duration-300 font-medium"
                       onClick={closeAllMenus}
+                      prefetch={true}
                     >
                       Login
                     </Link>
@@ -395,6 +415,7 @@ export default function Header() {
                       href="/register"
                       className="flex-1 text-center border-2 border-gray-900 text-gray-900 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium"
                       onClick={closeAllMenus}
+                      prefetch={true}
                     >
                       Register
                     </Link>

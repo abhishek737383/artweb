@@ -8,7 +8,7 @@ type GetProductsParams = {
   categoryId?: string;
   isActive?: boolean;
   isFeatured?: boolean;
-  isBestSeller?: boolean;
+  isBestSeller?: boolean;  // Add this line
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   minPrice?: number;
@@ -66,63 +66,6 @@ const normalizeProduct = (data: any): Product => {
   };
 };
 
-// Check if we're in production
-const isProduction = typeof window !== 'undefined' && 
-  window.location.hostname !== 'localhost' && 
-  window.location.hostname !== '127.0.0.1';
-
-// Fallback mock data for Netlify if API is down
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    _id: '1',
-    name: 'Premium Watercolor Set',
-    slug: 'premium-watercolor-set',
-    description: 'Professional watercolor set with vibrant colors',
-    price: 2499,
-    compareAtPrice: 2999,
-    sku: 'WCS-001',
-    stock: 25,
-    tags: ['watercolor', 'painting', 'professional'],
-    isActive: true,
-    isFeatured: true,
-    isBestSeller: true,
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=800&auto=format&fit=crop',
-        altText: 'Watercolor Set',
-        isPrimary: true
-      }
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    _id: '2',
-    name: 'Sketching Pencils Pack',
-    slug: 'sketching-pencils-pack',
-    description: 'Set of 12 professional sketching pencils',
-    price: 899,
-    compareAtPrice: 1199,
-    sku: 'SP-002',
-    stock: 50,
-    tags: ['pencils', 'sketching', 'drawing'],
-    isActive: true,
-    isFeatured: true,
-    isBestSeller: true,
-    images: [
-      {
-        url: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w-800&auto=format&fit=crop',
-        altText: 'Sketching Pencils',
-        isPrimary: true
-      }
-    ],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
 export const productApi = {
   // Get products with filters
   async getProducts(params: GetProductsParams = {}): Promise<{
@@ -132,18 +75,6 @@ export const productApi = {
     page: number;
     limit: number;
   }> {
-    // Use mock data in production if API fails
-    if (isProduction) {
-      console.log('Using fallback mock data for Netlify');
-      return {
-        products: mockProducts,
-        total: mockProducts.length,
-        totalPages: 1,
-        page: 1,
-        limit: 12,
-      };
-    }
-    
     try {
       const queryParams = new URLSearchParams();
       
@@ -153,10 +84,9 @@ export const productApi = {
         }
       });
 
-      const endpoint = `/products?${queryParams.toString()}`;
-      console.log('Fetching products from:', endpoint);
+      const response = await apiGet<any>(`/products?${queryParams.toString()}`);
       
-      const response = await apiGet<any>(endpoint);
+      console.log('Products API response:', response); // Debug log
       
       // Normalize response format
       let products: Product[] = [];
@@ -173,13 +103,9 @@ export const productApi = {
           total = products.length;
         }
       } else if (Array.isArray(response)) {
+        // Handle case where API returns array directly
         products = response.map(normalizeProduct);
         total = products.length;
-      } else if (isProduction && !response.success) {
-        // Fallback to mock data in production
-        console.log('API failed, using mock data');
-        products = mockProducts;
-        total = mockProducts.length;
       }
       
       return {
@@ -191,18 +117,6 @@ export const productApi = {
       };
     } catch (error) {
       console.error('productApi.getProducts error:', error);
-      
-      // Return mock data in production
-      if (isProduction) {
-        return {
-          products: mockProducts,
-          total: mockProducts.length,
-          totalPages: 1,
-          page: 1,
-          limit: 12,
-        };
-      }
-      
       return {
         products: [],
         total: 0,
@@ -215,14 +129,8 @@ export const productApi = {
 
   // Get product by ID
   async getById(id: string): Promise<Product | null> {
-    if (isProduction) {
-      // Return mock product in production
-      const mockProduct = mockProducts.find(p => p.id === id) || mockProducts[0];
-      return mockProduct;
-    }
-    
     try {
-      console.log('Fetching product by ID:', id);
+      console.log('Fetching product by ID:', id); // Debug log
       
       if (!id || id === 'undefined' || id === 'null') {
         console.error('Invalid product ID:', id);
@@ -231,11 +139,14 @@ export const productApi = {
       
       const response = await apiGet<any>(`/products/${id}`);
       
+      console.log('Product API response:', response); // Debug log
+      
       if (response.success && response.data) {
         return normalizeProduct(response.data);
       }
       
       if (response.data && !response.success) {
+        // Handle case where API returns product directly in data field
         return normalizeProduct(response.data);
       }
       
@@ -243,24 +154,12 @@ export const productApi = {
       return null;
     } catch (error) {
       console.error(`productApi.getById error (${id}):`, error);
-      
-      // Return mock product in production
-      if (isProduction) {
-        return mockProducts[0];
-      }
-      
       return null;
     }
   },
 
   // Get product by slug
   async getBySlug(slug: string): Promise<Product | null> {
-    if (isProduction) {
-      // Return mock product in production
-      const mockProduct = mockProducts.find(p => p.slug === slug) || mockProducts[0];
-      return mockProduct;
-    }
-    
     try {
       console.log('Fetching product by slug:', slug);
       const response = await apiGet<any>(`/products/slug/${encodeURIComponent(slug)}`);
@@ -276,12 +175,6 @@ export const productApi = {
       return null;
     } catch (error) {
       console.error(`productApi.getBySlug error (${slug}):`, error);
-      
-      // Return mock product in production
-      if (isProduction) {
-        return mockProducts[0];
-      }
-      
       return null;
     }
   },
@@ -289,7 +182,7 @@ export const productApi = {
   // Create product
   async create(payload: CreateProductDto): Promise<Product | null> {
     try {
-      console.log('Creating product with payload:', payload);
+      console.log('Creating product with payload:', payload); // Debug log
       
       // Clean the payload
       const cleanPayload: any = {
@@ -394,7 +287,7 @@ export const productApi = {
   // Upload images
   async uploadImages(files: File[]): Promise<ProductImage[]> {
     try {
-      console.log('Uploading', files.length, 'images');
+      console.log('Uploading', files.length, 'images'); // Debug log
       
       if (!files || files.length === 0) {
         throw new Error('No files to upload');
