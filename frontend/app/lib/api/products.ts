@@ -1,5 +1,11 @@
-import { apiGet, apiPost, apiPut, apiDelete, apiPostForm } from './client';
 import { Product, CreateProductDto, UpdateProductDto, ProductImage } from '../../../types/product';
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
 
 type GetProductsParams = {
   page?: number;
@@ -8,65 +14,71 @@ type GetProductsParams = {
   categoryId?: string;
   isActive?: boolean;
   isFeatured?: boolean;
-  isBestSeller?: boolean;  // Add this line
+  isBestSeller?: boolean;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   minPrice?: number;
   maxPrice?: number;
 };
 
-// Normalize product data from API
-const normalizeProduct = (data: any): Product => {
-  if (!data) {
+class ProductAPI {
+  private baseUrl: string;
+
+  constructor() {
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  }
+
+  // Normalize product data from API
+  private normalizeProduct(data: any): Product {
+    if (!data) {
+      return {
+        id: '',
+        _id: '',
+        name: '',
+        slug: '',
+        description: '',
+        price: 0,
+        sku: '',
+        stock: 0,
+        tags: [],
+        isActive: true,
+        isFeatured: false,
+        isBestSeller: false,
+        images: [],
+        createdAt: '',
+        updatedAt: ''
+      };
+    }
+    
     return {
-      id: '',
-      _id: '',
-      name: '',
-      slug: '',
-      description: '',
-      price: 0,
-      sku: '',
-      stock: 0,
-      tags: [],
-      isActive: true,
-      isFeatured: false,
-      isBestSeller: false,
-      images: [],
-      createdAt: '',
-      updatedAt: ''
+      _id: data._id || data.id,
+      id: data.id || data._id || '',
+      name: data.name || '',
+      slug: data.slug || '',
+      description: data.description || '',
+      shortDescription: data.shortDescription,
+      price: data.price || 0,
+      compareAtPrice: data.compareAtPrice,
+      costPrice: data.costPrice,
+      sku: data.sku || '',
+      barcode: data.barcode,
+      stock: data.stock || 0,
+      weight: data.weight,
+      dimensions: data.dimensions,
+      categoryId: data.categoryId || data.category?.id || null,
+      category: data.category,
+      tags: data.tags || [],
+      isActive: data.isActive !== false,
+      isFeatured: data.isFeatured || false,
+      isBestSeller: data.isBestSeller || false,
+      metaTitle: data.metaTitle,
+      metaDescription: data.metaDescription,
+      images: data.images || [],
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
     };
   }
-  
-  return {
-    _id: data._id || data.id,
-    id: data.id || data._id || '',
-    name: data.name || '',
-    slug: data.slug || '',
-    description: data.description || '',
-    shortDescription: data.shortDescription,
-    price: data.price || 0,
-    compareAtPrice: data.compareAtPrice,
-    costPrice: data.costPrice,
-    sku: data.sku || '',
-    barcode: data.barcode,
-    stock: data.stock || 0,
-    weight: data.weight,
-    dimensions: data.dimensions,
-    categoryId: data.categoryId || data.category?.id || null,
-    category: data.category,
-    tags: data.tags || [],
-    isActive: data.isActive !== false,
-    isFeatured: data.isFeatured || false,
-    isBestSeller: data.isBestSeller || false,
-    metaTitle: data.metaTitle,
-    metaDescription: data.metaDescription,
-    images: data.images || [],
-    createdAt: data.createdAt,
-    updatedAt: data.updatedAt,
-  };
-};
 
-export const productApi = {
   // Get products with filters
   async getProducts(params: GetProductsParams = {}): Promise<{
     products: Product[];
@@ -84,28 +96,29 @@ export const productApi = {
         }
       });
 
-      const response = await apiGet<any>(`/products?${queryParams.toString()}`);
+      const url = `${this.baseUrl}/products?${queryParams.toString()}`;
+      const response = await fetch(url);
       
-      console.log('Products API response:', response); // Debug log
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.status}`);
+      }
+      
+      const result: ApiResponse<any> = await response.json();
       
       // Normalize response format
       let products: Product[] = [];
       let total = 0;
       let totalPages = 1;
 
-      if (response.success) {
-        if (Array.isArray(response.data?.products)) {
-          products = response.data.products.map(normalizeProduct);
-          total = response.data.total || products.length;
-          totalPages = response.data.totalPages || 1;
-        } else if (Array.isArray(response.data)) {
-          products = response.data.map(normalizeProduct);
+      if (result.success) {
+        if (Array.isArray(result.data?.products)) {
+          products = result.data.products.map((p: any) => this.normalizeProduct(p));
+          total = result.data.total || products.length;
+          totalPages = result.data.totalPages || 1;
+        } else if (Array.isArray(result.data)) {
+          products = result.data.map((p: any) => this.normalizeProduct(p));
           total = products.length;
         }
-      } else if (Array.isArray(response)) {
-        // Handle case where API returns array directly
-        products = response.map(normalizeProduct);
-        total = products.length;
       }
       
       return {
@@ -116,7 +129,7 @@ export const productApi = {
         limit: params.limit || 12,
       };
     } catch (error) {
-      console.error('productApi.getProducts error:', error);
+      console.error('ProductAPI.getProducts error:', error);
       return {
         products: [],
         total: 0,
@@ -125,65 +138,68 @@ export const productApi = {
         limit: 12,
       };
     }
-  },
+  }
 
   // Get product by ID
   async getById(id: string): Promise<Product | null> {
     try {
-      console.log('Fetching product by ID:', id); // Debug log
-      
       if (!id || id === 'undefined' || id === 'null') {
         console.error('Invalid product ID:', id);
         return null;
       }
       
-      const response = await apiGet<any>(`/products/${id}`);
+      const response = await fetch(`${this.baseUrl}/products/${id}`);
       
-      console.log('Product API response:', response); // Debug log
-      
-      if (response.success && response.data) {
-        return normalizeProduct(response.data);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch product: ${response.status}`);
       }
       
-      if (response.data && !response.success) {
-        // Handle case where API returns product directly in data field
-        return normalizeProduct(response.data);
+      const result: ApiResponse<any> = await response.json();
+      
+      if (result.success && result.data) {
+        return this.normalizeProduct(result.data);
       }
       
-      console.log('Product not found or API error:', response);
+      if (result.data && !result.success) {
+        return this.normalizeProduct(result.data);
+      }
+      
       return null;
     } catch (error) {
-      console.error(`productApi.getById error (${id}):`, error);
+      console.error(`ProductAPI.getById error (${id}):`, error);
       return null;
     }
-  },
+  }
 
   // Get product by slug
   async getBySlug(slug: string): Promise<Product | null> {
     try {
-      console.log('Fetching product by slug:', slug);
-      const response = await apiGet<any>(`/products/slug/${encodeURIComponent(slug)}`);
+      const response = await fetch(`${this.baseUrl}/products/slug/${encodeURIComponent(slug)}`);
       
-      if (response.success && response.data) {
-        return normalizeProduct(response.data);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch product by slug: ${response.status}`);
       }
       
-      if (response.data && !response.success) {
-        return normalizeProduct(response.data);
+      const result: ApiResponse<any> = await response.json();
+      
+      if (result.success && result.data) {
+        return this.normalizeProduct(result.data);
+      }
+      
+      if (result.data && !result.success) {
+        return this.normalizeProduct(result.data);
       }
       
       return null;
     } catch (error) {
-      console.error(`productApi.getBySlug error (${slug}):`, error);
+      console.error(`ProductAPI.getBySlug error (${slug}):`, error);
       return null;
     }
-  },
+  }
 
   // Create product
   async create(payload: CreateProductDto): Promise<Product | null> {
     try {
-      console.log('Creating product with payload:', payload); // Debug log
-      
       // Clean the payload
       const cleanPayload: any = {
         name: payload.name,
@@ -213,28 +229,34 @@ export const productApi = {
         }
       });
       
-      console.log('Sending cleaned payload:', cleanPayload);
+      const response = await fetch(`${this.baseUrl}/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cleanPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create product: ${response.status}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
       
-      const response = await apiPost<any>('/products', cleanPayload);
-      
-      console.log('Create product response:', response);
-      
-      if (response.success && response.data) {
-        return normalizeProduct(response.data);
+      if (result.success && result.data) {
+        return this.normalizeProduct(result.data);
       }
       
-      throw new Error(response.message || 'Failed to create product');
+      throw new Error(result.message || 'Failed to create product');
     } catch (error: any) {
-      console.error('productApi.create error:', error);
+      console.error('ProductAPI.create error:', error);
       throw error;
     }
-  },
+  }
 
   // Update product
   async update(id: string, payload: UpdateProductDto): Promise<Product | null> {
     try {
-      console.log('Updating product', id, 'with payload:', payload);
-      
       if (!id || id === 'undefined' || id === 'null') {
         throw new Error('Invalid product ID');
       }
@@ -256,57 +278,75 @@ export const productApi = {
         }
       });
       
-      console.log('Sending cleaned update payload:', cleanPayload);
+      const response = await fetch(`${this.baseUrl}/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cleanPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update product: ${response.status}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
       
-      const response = await apiPut<any>(`/products/${id}`, cleanPayload);
-      
-      console.log('Update product response:', response);
-      
-      if (response.success && response.data) {
-        return normalizeProduct(response.data);
+      if (result.success && result.data) {
+        return this.normalizeProduct(result.data);
       }
       
-      throw new Error(response.message || 'Failed to update product');
+      throw new Error(result.message || 'Failed to update product');
     } catch (error: any) {
-      console.error(`productApi.update error (${id}):`, error);
+      console.error(`ProductAPI.update error (${id}):`, error);
       throw error;
     }
-  },
+  }
 
   // Delete product
   async delete(id: string): Promise<boolean> {
     try {
-      const response = await apiDelete<{ success: boolean; message?: string }>(`/products/${id}`);
-      return response?.success === true;
+      const response = await fetch(`${this.baseUrl}/products/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete product: ${response.status}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
+      return result?.success === true;
     } catch (error) {
-      console.error(`productApi.delete error (${id}):`, error);
+      console.error(`ProductAPI.delete error (${id}):`, error);
       return false;
     }
-  },
+  }
 
   // Upload images
   async uploadImages(files: File[]): Promise<ProductImage[]> {
     try {
-      console.log('Uploading', files.length, 'images'); // Debug log
-      
       if (!files || files.length === 0) {
         throw new Error('No files to upload');
       }
       
       const formData = new FormData();
-      files.forEach((file, index) => {
-        console.log(`Adding file ${index}:`, file.name, file.type, file.size);
+      files.forEach((file) => {
         formData.append('images', file);
       });
 
-      console.log('Sending FormData with', files.length, 'files');
+      const response = await fetch(`${this.baseUrl}/products/upload-images`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to upload images: ${response.status}`);
+      }
+
+      const result: ApiResponse<any> = await response.json();
       
-      const response = await apiPostForm<any>('/products/upload-images', formData);
-      
-      console.log('Upload images response:', response);
-      
-      if (response.success && Array.isArray(response.data)) {
-        return response.data.map((img: any, index: number) => ({
+      if (result.success && Array.isArray(result.data)) {
+        return result.data.map((img: any, index: number) => ({
           url: img.url,
           altText: img.altText || `Product Image ${index + 1}`,
           publicId: img.publicId || `img-${Date.now()}-${index}`,
@@ -314,10 +354,12 @@ export const productApi = {
         }));
       }
       
-      throw new Error(response.message || 'Failed to upload images');
+      throw new Error(result.message || 'Failed to upload images');
     } catch (error: any) {
-      console.error('productApi.uploadImages error:', error);
+      console.error('ProductAPI.uploadImages error:', error);
       throw error;
     }
-  },
-};
+  }
+}
+
+export const productApi = new ProductAPI();
