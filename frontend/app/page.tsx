@@ -101,7 +101,7 @@ const PremiumSlider = ({
       <div className="relative w-full aspect-[16/6] md:aspect-[21/8] lg:aspect-[24/8] bg-gradient-to-br from-gray-100 to-gray-200">
         <div className="absolute inset-0 flex items-center justify-center p-4">
           <div className="text-center max-w-2xl">
-            <Crown className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-6 text-gray-400" />
+            <Crown className="w-10 h-16 md:w-20 md:h-25 mx-auto mb-10 text-gray-400" />
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
               Premium Art Supplies
             </h2>
