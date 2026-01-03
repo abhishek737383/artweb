@@ -1,4 +1,4 @@
-export default function CategoryLoading() {
+export default function CategoriesLoading() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Skeleton */}
@@ -27,47 +27,43 @@ export default function CategoryLoading() {
 
       {/* Content Skeleton */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Subcategories Skeleton */}
-        <div className="mb-12 md:mb-16">
+        {/* Section Header Skeleton */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
+              <div className="h-8 w-48 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg"></div>
+            </div>
+            <div className="h-4 w-64 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg"></div>
+          </div>
+          <div className="h-4 w-20 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg"></div>
+        </div>
+
+        {/* Categories Grid Skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
+          {[...Array(8)].map((_, index) => (
+            <div key={index} className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-xl"></div>
+          ))}
+        </div>
+
+        {/* CTA Button Skeleton */}
+        <div className="h-12 w-48 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-xl mx-auto mb-12"></div>
+
+        {/* Category Hierarchy Skeleton */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200 p-6 md:p-8 mb-12">
           <div className="h-8 w-48 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg mb-6"></div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-xl"></div>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-xl"></div>
             ))}
           </div>
         </div>
 
-        {/* Products Skeleton */}
-        <div className="mb-12 md:mb-16">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div>
-              <div className="h-8 w-48 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg mb-2"></div>
-              <div className="h-4 w-32 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg"></div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-48 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg"></div>
-              <div className="h-10 w-32 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg"></div>
-            </div>
-          </div>
-
-          {/* Mobile Skeleton */}
-          <div className="md:hidden">
-            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 pl-4">
-              {[...Array(3)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className="flex-shrink-0 w-48 h-64 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-xl"
-                ></div>
-              ))}
-            </div>
-          </div>
-
-          {/* Desktop Skeleton */}
-          <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-xl"></div>
-            ))}
-          </div>
+        {/* CTA Section Skeleton */}
+        <div className="bg-gradient-to-r from-gray-900 to-black rounded-2xl p-8">
+          <div className="h-8 w-64 bg-gradient-to-r from-gray-300 to-gray-400 animate-pulse rounded-lg mx-auto mb-4"></div>
+          <div className="h-4 w-96 max-w-full bg-gradient-to-r from-gray-300 to-gray-400 animate-pulse rounded-lg mx-auto mb-6"></div>
+          <div className="h-12 w-48 bg-gradient-to-r from-gray-300 to-gray-400 animate-pulse rounded-lg mx-auto"></div>
         </div>
       </div>
     </div>

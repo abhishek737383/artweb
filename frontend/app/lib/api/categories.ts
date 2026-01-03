@@ -7,6 +7,16 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// In-memory cache
+let categoriesCache: {
+  data: Category[] | null;
+  timestamp: number;
+} = { data: null, timestamp: 0 };
+
+let categoryCache = new Map<string, { data: Category | null; timestamp: number }>();
+
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
 class CategoryAPI {
   private baseUrl: string;
 
@@ -33,10 +43,17 @@ class CategoryAPI {
     };
   }
 
-  // Get all categories
+  // Get all categories WITH CACHING
   async getAll(): Promise<Category[]> {
+    // Check cache
+    if (categoriesCache.data && Date.now() - categoriesCache.timestamp < CACHE_DURATION) {
+      return categoriesCache.data;
+    }
+
     try {
-      const response = await fetch(`${this.baseUrl}/categories`);
+      const response = await fetch(`${this.baseUrl}/categories`, {
+        next: { revalidate: 300 } // Revalidate every 5 minutes
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to fetch categories: ${response.status}`);
@@ -44,70 +61,39 @@ class CategoryAPI {
       
       const result: ApiResponse<any[]> = await response.json();
       
+      let categories: Category[] = [];
+      
       if (result.success && Array.isArray(result.data)) {
-        return result.data.map(cat => this.normalizeCategory(cat));
+        categories = result.data.map(cat => this.normalizeCategory(cat));
+      } else if (Array.isArray(result)) {
+        categories = result.map(cat => this.normalizeCategory(cat));
       }
       
-      // Handle different response formats
-      if (Array.isArray(result)) {
-        return result.map(cat => this.normalizeCategory(cat));
-      }
+      // Update cache
+      categoriesCache = {
+        data: categories,
+        timestamp: Date.now()
+      };
       
-      return [];
+      return categories;
     } catch (error) {
       console.error('CategoryAPI.getAll error:', error);
-      return [];
+      return categoriesCache.data || [];
     }
   }
 
-  // Get category tree
-  async getTree(): Promise<Category[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/categories/tree`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch category tree: ${response.status}`);
-      }
-      
-      const result: ApiResponse<any[]> = await response.json();
-      
-      if (result.success && Array.isArray(result.data)) {
-        return result.data.map(cat => this.normalizeCategory(cat));
-      }
-      
-      return [];
-    } catch (error) {
-      console.error('CategoryAPI.getTree error:', error);
-      return [];
-    }
-  }
-
-  // Get category by ID
-  async getById(id: string): Promise<Category | null> {
-    try {
-      const response = await fetch(`${this.baseUrl}/categories/${id}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch category: ${response.status}`);
-      }
-      
-      const result: ApiResponse<any> = await response.json();
-      
-      if (result.success && result.data) {
-        return this.normalizeCategory(result.data);
-      }
-      
-      return null;
-    } catch (error) {
-      console.error(`CategoryAPI.getById error (${id}):`, error);
-      return null;
-    }
-  }
-
-  // Get category by slug
+  // Get category by slug WITH CACHING
   async getBySlug(slug: string): Promise<Category | null> {
+    // Check cache first
+    const cached = categoryCache.get(slug);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+
     try {
-      const response = await fetch(`${this.baseUrl}/categories/slug/${slug}`);
+      const response = await fetch(`${this.baseUrl}/categories/slug/${slug}`, {
+        next: { revalidate: 300 } // Revalidate every 5 minutes
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to fetch category by slug: ${response.status}`);
@@ -115,15 +101,67 @@ class CategoryAPI {
       
       const result: ApiResponse<any> = await response.json();
       
+      let category: Category | null = null;
+      
       if (result.success && result.data) {
-        return this.normalizeCategory(result.data);
+        category = this.normalizeCategory(result.data);
+        
+        // Update cache
+        categoryCache.set(slug, {
+          data: category,
+          timestamp: Date.now()
+        });
       }
       
-      return null;
+      return category;
     } catch (error) {
       console.error(`CategoryAPI.getBySlug error (${slug}):`, error);
       return null;
     }
+  }
+
+  // Get category by ID WITH CACHING
+  async getById(id: string): Promise<Category | null> {
+    // Check cache first
+    const cached = categoryCache.get(id);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/categories/${id}`, {
+        next: { revalidate: 300 }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch category: ${response.status}`);
+      }
+      
+      const result: ApiResponse<any> = await response.json();
+      
+      let category: Category | null = null;
+      
+      if (result.success && result.data) {
+        category = this.normalizeCategory(result.data);
+        
+        // Update cache
+        categoryCache.set(id, {
+          data: category,
+          timestamp: Date.now()
+        });
+      }
+      
+      return category;
+    } catch (error) {
+      console.error(`CategoryAPI.getById error (${id}):`, error);
+      return null;
+    }
+  }
+
+  // Clear cache (call this after create/update/delete operations)
+  clearCache(): void {
+    categoriesCache = { data: null, timestamp: 0 };
+    categoryCache.clear();
   }
 
   // Create category
@@ -171,6 +209,9 @@ class CategoryAPI {
       }
 
       const result: ApiResponse<any> = await response.json();
+      
+      // Clear cache after create
+      this.clearCache();
       
       if (result.success && result.data) {
         return this.normalizeCategory(result.data);
@@ -228,6 +269,9 @@ class CategoryAPI {
 
       const result: ApiResponse<any> = await response.json();
       
+      // Clear cache after update
+      this.clearCache();
+      
       if (result.success && result.data) {
         return this.normalizeCategory(result.data);
       }
@@ -251,6 +295,10 @@ class CategoryAPI {
       }
 
       const result: ApiResponse<any> = await response.json();
+      
+      // Clear cache after delete
+      this.clearCache();
+      
       return result?.success === true;
     } catch (error) {
       console.error(`CategoryAPI.delete error (${id}):`, error);

@@ -17,9 +17,6 @@ import ProductGrid from '../../components/shared/ProductGrid';
 import SortSelect from '../../components/shared/SortSelect';
 import { Suspense } from 'react';
 
-// Cache duration for revalidation (in seconds)
-export const revalidate = 3600; // Revalidate every hour
-
 interface CategoryPageProps {
   params: Promise<{
     slug: string;
@@ -31,109 +28,68 @@ interface CategoryPageProps {
   }>;
 }
 
-// Optimized data fetching with caching
-async function getCategoryData(slug: string) {
-  try {
-    const category = await categoryApi.getBySlug(slug);
-    if (!category || !category.isActive) {
-      return null;
-    }
-    
-    // Fetch all categories in parallel with the main category
-    const allCategoriesPromise = categoryApi.getAll();
-    
-    return {
-      category,
-      allCategories: await allCategoriesPromise,
-    };
-  } catch (error) {
-    console.error('Error fetching category data:', error);
-    return null;
-  }
-}
-
-async function getProductsData(categoryId: string, page: number, sortBy: string, searchQuery: string) {
-  try {
-    const productsData = await productApi.getProducts({
-      page,
-      limit: 12,
-      categoryId,
-      isActive: true,
-      sortBy: sortBy === 'price-desc' ? 'price' : sortBy,
-      sortOrder: sortBy.includes('desc') ? 'desc' : 'asc',
-      search: searchQuery,
-    });
-    
-    return productsData;
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return { products: [], total: 0, totalPages: 0 };
-  }
-}
+// Static generation for faster loading
+export const revalidate = 3600; // Revalidate every hour
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const category = await categoryApi.getBySlug(slug);
   
-  try {
-    const data = await getCategoryData(slug);
-    
-    if (!data) {
-      return {
-        title: 'Category Not Found | Art Plaza',
-        description: 'The requested category could not be found',
-      };
-    }
-    
-    return {
-      title: `${data.category.name} | Premium Collection | Art Plaza`,
-      description: data.category.description || `Explore premium ${data.category.name} collection at Art Plaza`,
-      openGraph: {
-        title: `${data.category.name} | Art Plaza`,
-        description: data.category.description || `Explore our ${data.category.name} collection`,
-        type: 'website',
-      },
-    };
-  } catch (error) {
-    return {
-      title: 'Category | Art Plaza',
-      description: 'Explore premium art supplies and stationery collections',
-    };
-  }
+  return {
+    title: `${category?.name || 'Premium Collection'} | Art Plaza`,
+    description: category?.description || `Explore premium ${category?.name || 'art supplies'} collection`,
+  };
 }
 
-// ProductsContent component - optimized
-async function ProductsContent({ 
-  slug, 
-  page, 
-  sortBy, 
-  searchQuery,
-  categoryName 
-}: { 
-  slug: string; 
-  page: number; 
-  sortBy: string; 
-  searchQuery: string;
-  categoryName: string;
-}) {
-  const categoryData = await getCategoryData(slug);
+// Helper function to get image URL safely
+function getImageUrl(image: any): string {
+  if (!image) return '';
   
-  if (!categoryData) {
-    return (
-      <div className="text-center py-12 md:py-16">
-        <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
-          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-            <Package className="w-8 h-8 md:w-10 md:h-10 text-gray-300" />
-          </div>
-        </div>
-        <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
-          Category not found
-        </h3>
-      </div>
-    );
+  if (typeof image === 'string') {
+    return image;
   }
+  
+  if (typeof image === 'object') {
+    return image.url || image.src || '';
+  }
+  
+  return '';
+}
 
-  const productsData = await getProductsData(categoryData.category._id, page, sortBy, searchQuery);
+// Helper function to get image alt text
+function getImageAlt(image: any, defaultAlt: string): string {
+  if (!image || typeof image !== 'object') return defaultAlt;
+  
+  return image.altText || image.alt || defaultAlt;
+}
+
+// Products Content Component
+async function ProductsContent({ 
+  categoryId,
+  categoryName,
+  page,
+  sortBy,
+  searchQuery,
+  slug
+}: { 
+  categoryId: string;
+  categoryName: string;
+  page: number;
+  sortBy: string;
+  searchQuery: string;
+  slug: string;
+}) {
+  // Fetch products
+  const productsData = await productApi.getProducts({
+    page,
+    limit: 12,
+    categoryId,
+    isActive: true,
+    sortBy: sortBy === 'price-desc' ? 'price' : sortBy,
+    sortOrder: sortBy.includes('desc') ? 'desc' : 'asc',
+    search: searchQuery,
+  }).catch(() => ({ products: [], total: 0, totalPages: 0 }));
 
   if (productsData.products.length === 0) {
     return (
@@ -174,10 +130,56 @@ async function ProductsContent({
 
   return (
     <>
-      <ProductGrid 
-        products={productsData.products} 
-        loading={false}
-      />
+      {/* Mobile: Horizontal Scroll */}
+      <div className="md:hidden">
+        <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 pl-4">
+          {productsData.products.map((product) => {
+            const firstImage = product.images?.[0];
+            const imageUrl = getImageUrl(firstImage);
+            const imageAlt = getImageAlt(firstImage, product.name);
+            
+            return (
+              <div key={product._id} className="flex-shrink-0 w-48">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                  {/* Product Image */}
+                  <div className="relative h-40 w-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg mb-3 overflow-hidden">
+                    {imageUrl ? (
+                      <img 
+                        src={imageUrl} 
+                        alt={imageAlt}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-100"></div>
+                    )}
+                  </div>
+                  
+                  {/* Product Info */}
+                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 text-sm">
+                    {product.name}
+                  </h3>
+                  <p className="text-sm font-bold text-gray-900 mb-3">
+                    ₹{product.price.toLocaleString()}
+                  </p>
+                  
+                  <button className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all">
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Desktop: Grid */}
+      <div className="hidden md:block">
+        <ProductGrid 
+          products={productsData.products} 
+          loading={false}
+        />
+      </div>
       
       {/* Pagination */}
       {productsData.totalPages > 1 && (
@@ -238,147 +240,76 @@ async function ProductsContent({
   );
 }
 
-// Subcategories component
-async function SubcategoriesContent({ categoryId, allCategories }: { 
-  categoryId: string;
-  allCategories: any[];
-}) {
-  const subcategories = allCategories.filter(cat => 
-    cat.isActive && cat.parentId === categoryId
-  );
-
-  if (subcategories.length === 0) return null;
-
-  return (
-    <section className="mb-12 md:mb-16">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-            Subcategories
-          </h2>
-          <p className="text-gray-600 text-sm">
-            Explore related collections
-          </p>
-        </div>
-        <div className="text-sm text-gray-500">
-          {subcategories.length} subcategories
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-        {subcategories.map((subcategory, index) => (
-          <CategoryCard 
-            key={subcategory._id} 
-            category={subcategory} 
-            index={index}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// Related categories component
-async function RelatedCategoriesContent({ 
-  categoryId, 
-  parentId,
-  allCategories 
-}: { 
-  categoryId: string; 
-  parentId?: string | null;
-  allCategories: any[];
-}) {
-  if (!parentId) return null;
-  
-  const siblingCategories = allCategories.filter(cat => 
-    cat.isActive && cat.parentId === parentId && cat._id !== categoryId
-  );
-
-  if (siblingCategories.length === 0) return null;
-
-  return (
-    <section className="mb-12 md:mb-16">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-            Related Collections
-          </h2>
-          <p className="text-gray-600 text-sm">
-            Explore other collections in the same category
-          </p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-        {siblingCategories.map((sibling, index) => (
-          <CategoryCard 
-            key={sibling._id} 
-            category={sibling} 
-            index={index}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
   
-  // Fetch all initial data in parallel
-  const categoryData = await getCategoryData(slug);
+  // Fetch category data (cached)
+  const category = await categoryApi.getBySlug(slug);
   
-  if (!categoryData) {
+  if (!category || !category.isActive) {
     notFound();
   }
-
-  const { category, allCategories } = categoryData;
-  const parentCategory = category.parentId 
-    ? allCategories.find(cat => cat._id === category.parentId)
-    : null;
 
   const page = parseInt(resolvedSearchParams.page || '1');
   const sortBy = resolvedSearchParams.sort || 'createdAt';
   const searchQuery = resolvedSearchParams.search || '';
 
+  // Fetch all categories for breadcrumb and subcategories
+  const categories = await categoryApi.getAll();
+  
+  // Get parent category
+  const parentCategory = category.parentId 
+    ? categories.find(cat => cat._id === category.parentId)
+    : null;
+
+  // Get subcategories
+  const subcategories = categories.filter(cat => 
+    cat.isActive && cat.parentId === category._id
+  );
+
+  // Get related categories
+  const relatedCategories = category.parentId 
+    ? categories.filter(cat => 
+        cat.isActive && cat.parentId === category.parentId && cat._id !== category._id
+      )
+    : [];
+
+  // Calculate product count (we'll get this from products data)
+  const productsData = await productApi.getProducts({
+    page: 1,
+    limit: 1,
+    categoryId: category._id,
+    isActive: true,
+  }).catch(() => ({ total: 0 }));
+
   return (
     <main className="min-h-screen bg-white">
-      {/* 1. HEADER */}
+      {/* 1. HEADER - Shows immediately */}
       <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 pb-8 md:pb-12">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center shadow-xl">
-                  <Crown className="w-6 h-6 md:w-7 md:h-7 text-white" />
-                </div>
-                <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400" />
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center shadow-xl">
+                <Crown className="w-6 h-6 md:w-7 md:h-7 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
-                  {category.name} <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collection</span>
-                </h1>
-                {category.description && (
-                  <p className="text-gray-600 text-sm md:text-base mt-1 max-w-2xl">
-                    {category.description}
-                  </p>
-                )}
-              </div>
+              <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400" />
             </div>
-            
-            {/* Product Count - Will be updated by ProductsContent */}
-            <div className="bg-gradient-to-r from-gray-900 to-black text-white px-4 py-3 rounded-xl shadow-lg">
-              <div className="text-center">
-                <div className="text-xl md:text-2xl font-bold">-</div>
-                <div className="text-xs text-gray-300">Premium Products</div>
-              </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
+                {category.name} <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collection</span>
+              </h1>
+              {category.description && (
+                <p className="text-gray-600 text-sm md:text-base mt-1 max-w-2xl">
+                  {category.description}
+                </p>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. BREADCRUMB */}
+      {/* 2. BREADCRUMB - Shows immediately */}
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <nav className="flex items-center text-sm text-gray-600 overflow-x-auto">
@@ -411,11 +342,34 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
       {/* 3. MAIN CONTENT */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        {/* Subcategories - Preloaded data */}
-        <SubcategoriesContent 
-          categoryId={category._id} 
-          allCategories={allCategories}
-        />
+        {/* Subcategories - Load immediately */}
+        {subcategories.length > 0 && (
+          <section className="mb-12 md:mb-16">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                  Subcategories
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Explore related collections
+                </p>
+              </div>
+              <div className="text-sm text-gray-500">
+                {subcategories.length} subcategories
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {subcategories.map((subcategory, index) => (
+                <CategoryCard 
+                  key={subcategory._id} 
+                  category={subcategory} 
+                  index={index}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 4. PRODUCTS SECTION */}
         <section className="mb-12 md:mb-16">
@@ -425,7 +379,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                 Products in {category.name}
               </h2>
               <p className="text-gray-600 text-sm">
-                Premium products
+                Showing {productsData.total} premium products
               </p>
             </div>
 
@@ -458,24 +412,42 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             </div>
           </div>
 
-          {/* PRODUCTS DISPLAY - With Suspense */}
-          <Suspense fallback={<ProductGrid loading={true} />}>
-            <ProductsContent 
-              slug={slug}
-              page={page}
-              sortBy={sortBy}
-              searchQuery={searchQuery}
-              categoryName={category.name}
-            />
-          </Suspense>
+          {/* PRODUCTS DISPLAY */}
+          <ProductsContent 
+            categoryId={category._id}
+            categoryName={category.name}
+            page={page}
+            sortBy={sortBy}
+            searchQuery={searchQuery}
+            slug={slug}
+          />
         </section>
 
         {/* 5. RELATED CATEGORIES */}
-        <RelatedCategoriesContent 
-          categoryId={category._id}
-          parentId={category.parentId}
-          allCategories={allCategories}
-        />
+        {relatedCategories.length > 0 && (
+          <section className="mb-12 md:mb-16">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                  Related Collections
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Explore other collections in the same category
+                </p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {relatedCategories.map((sibling, index) => (
+                <CategoryCard 
+                  key={sibling._id} 
+                  category={sibling} 
+                  index={index}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 6. PREMIUM CTA */}
         <section>
