@@ -1,12 +1,21 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ChevronRight, Package } from 'lucide-react';
+import { 
+  ChevronRight, 
+  Crown,
+  Sparkles,
+  Search,
+  X,
+  ArrowRight,
+  Package
+} from 'lucide-react';
 import { categoryApi } from '../../lib/api/categories';
 import { productApi } from '../../lib/api/products';
 import CategoryCard from '../../components/shared/CategoryCard';
 import ProductGrid from '../../components/shared/ProductGrid';
 import SortSelect from '../../components/shared/SortSelect';
+import { Suspense } from 'react';
 import { Category } from '../../../types/category';
 
 interface CategoryPageProps {
@@ -16,6 +25,7 @@ interface CategoryPageProps {
   searchParams: Promise<{
     page?: string;
     sort?: string;
+    search?: string;
   }>;
 }
 
@@ -24,128 +34,375 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const category = await categoryApi.getBySlug(slug);
   
   return {
-    title: `${category?.name || 'Category'} | Art Supplies Store`,
-    description: category?.description || `Browse ${category?.name || 'category'} products`,
+    title: `${category?.name || 'Premium Collection'} | Art Plaza`,
+    description: category?.description || `Explore premium ${category?.name || 'art supplies'} collection`,
   };
 }
 
+async function ProductsContent({ 
+  slug, 
+  page, 
+  sortBy, 
+  searchQuery,
+  categoryName 
+}: { 
+  slug: string; 
+  page: number; 
+  sortBy: string; 
+  searchQuery: string;
+  categoryName: string;
+}) {
+  const category = await categoryApi.getBySlug(slug);
+  
+  // Fix: Add null check for category
+  if (!category) {
+    return (
+      <div className="text-center py-12 md:py-16">
+        <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
+          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+            <Package className="w-8 h-8 md:w-10 md:h-10 text-gray-300" />
+          </div>
+        </div>
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
+          Category not found
+        </h3>
+      </div>
+    );
+  }
+
+  const productsData = await productApi.getProducts({
+    page,
+    limit: 12,
+    categoryId: category._id,
+    isActive: true,
+    sortBy: sortBy === 'price-desc' ? 'price' : sortBy,
+    sortOrder: sortBy.includes('desc') ? 'desc' : 'asc',
+    search: searchQuery,
+  }).catch(() => ({ products: [], total: 0, totalPages: 0 }));
+
+  if (productsData.products.length === 0) {
+    return (
+      <div className="text-center py-12 md:py-16">
+        <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
+          <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+            <Package className="w-8 h-8 md:w-10 md:h-10 text-gray-300" />
+          </div>
+        </div>
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3">
+          {searchQuery ? 'No Products Found' : 'No Products Available'}
+        </h3>
+        <p className="text-gray-600 mb-6 max-w-md mx-auto">
+          {searchQuery 
+            ? `No products matching "${searchQuery}" in ${categoryName}`
+            : `No products available in ${categoryName} yet.`}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {searchQuery && (
+            <Link
+              href={`/categories/${slug}`}
+              className="px-4 py-3 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+            >
+              Clear Search
+            </Link>
+          )}
+          <Link
+            href="/products"
+            className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm"
+          >
+            Browse All Products
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <ProductGrid 
+        products={productsData.products} 
+        loading={false}
+        variant="horizontal-mobile"
+      />
+      
+      {/* Pagination */}
+      {productsData.totalPages > 1 && (
+        <div className="mt-12 flex justify-center">
+          <div className="flex items-center gap-2">
+            {page > 1 && (
+              <Link
+                href={`/categories/${slug}?${new URLSearchParams({
+                  page: (page - 1).toString(),
+                  ...(sortBy !== 'createdAt' && { sort: sortBy }),
+                  ...(searchQuery && { search: searchQuery }),
+                }).toString()}`}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center text-sm"
+              >
+                ← Previous
+              </Link>
+            )}
+            
+            {Array.from({ length: Math.min(5, productsData.totalPages) }, (_, i) => {
+              const pageNum = i + 1;
+              const isActive = pageNum === page;
+              
+              return (
+                <Link
+                  key={pageNum}
+                  href={`/categories/${slug}?${new URLSearchParams({
+                    ...(pageNum > 1 && { page: pageNum.toString() }),
+                    ...(sortBy !== 'createdAt' && { sort: sortBy }),
+                    ...(searchQuery && { search: searchQuery }),
+                  }).toString()}`}
+                  className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                    isActive
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageNum}
+                </Link>
+              );
+            })}
+            
+            {page < productsData.totalPages && (
+              <Link
+                href={`/categories/${slug}?${new URLSearchParams({
+                  page: (page + 1).toString(),
+                  ...(sortBy !== 'createdAt' && { sort: sortBy }),
+                  ...(searchQuery && { search: searchQuery }),
+                }).toString()}`}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center text-sm"
+              >
+                Next →
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+async function SubcategoriesContent({ categoryId }: { categoryId: string }) {
+  const categories = await categoryApi.getAll().catch(() => []);
+  const subcategories = categories.filter(cat => 
+    cat.isActive && cat.parentId === categoryId
+  );
+
+  if (subcategories.length === 0) return null;
+
+  return (
+    <section className="mb-12 md:mb-16">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+            Subcategories
+          </h2>
+          <p className="text-gray-600 text-sm">
+            Explore related collections
+          </p>
+        </div>
+        <div className="text-sm text-gray-500">
+          {subcategories.length} subcategories
+        </div>
+      </div>
+      
+      {/* Subcategories Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {subcategories.map((subcategory, index) => (
+          <CategoryCard 
+            key={subcategory._id} 
+            category={subcategory} 
+            index={index}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+async function RelatedCategoriesContent({ 
+  categoryId, 
+  parentId 
+}: { 
+  categoryId: string; 
+  parentId?: string | null; // Fix: Allow null
+}) {
+  if (!parentId) return null;
+  
+  const categories = await categoryApi.getAll().catch(() => []);
+  const siblingCategories = categories.filter(cat => 
+    cat.isActive && cat.parentId === parentId && cat._id !== categoryId
+  );
+
+  if (siblingCategories.length === 0) return null;
+
+  return (
+    <section className="mb-12 md:mb-16">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+            Related Collections
+          </h2>
+          <p className="text-gray-600 text-sm">
+            Explore other collections in the same category
+          </p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {siblingCategories.map((sibling, index) => (
+          <CategoryCard 
+            key={sibling._id} 
+            category={sibling} 
+            index={index}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
-  // Await the promises
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
   
+  // Fetch only essential category data first
   const category = await categoryApi.getBySlug(slug);
   
   if (!category || !category.isActive) {
     notFound();
   }
 
-  // Parse search params
   const page = parseInt(resolvedSearchParams.page || '1');
-  const limit = 12;
   const sortBy = resolvedSearchParams.sort || 'createdAt';
-  const sortOrder = sortBy.includes('desc') ? 'desc' : 'asc';
+  const searchQuery = resolvedSearchParams.search || '';
 
-  // Fetch data in parallel
-  const [allCategories, productsData] = await Promise.all([
-    categoryApi.getAll(),
-    productApi.getProducts({
-      page,
-      limit,
-      categoryId: category._id,
-      isActive: true,
-      sortBy,
-      sortOrder,
-    }),
-  ]);
-
-  // Get subcategories
-  const subcategories = allCategories.filter(cat => 
-    cat.isActive && cat.parentId === category._id
-  );
-
-  // Get sibling categories (same parent)
-  const siblingCategories = category.parentId 
-    ? allCategories.filter(cat => 
-        cat.isActive && cat.parentId === category.parentId && cat._id !== category._id
-      )
-    : [];
-
-  // Find parent category
+  // Get parent category data
+  const categories = await categoryApi.getAll().catch(() => []);
   const parentCategory = category.parentId 
-    ? allCategories.find(cat => cat._id === category.parentId)
+    ? categories.find(cat => cat._id === category.parentId)
     : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">{category.name}</h1>
-          {category.description && (
-            <p className="text-lg md:text-xl opacity-90 max-w-3xl">
-              {category.description}
-            </p>
-          )}
+    <main className="min-h-screen bg-white">
+      {/* 1. HEADER - Shows immediately */}
+      <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 pb-8 md:pb-12">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center shadow-xl">
+                  <Crown className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                </div>
+                <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
+                  {category.name} <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collection</span>
+                </h1>
+                {category.description && (
+                  <p className="text-gray-600 text-sm md:text-base mt-1 max-w-2xl">
+                    {category.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            {/* Product Count */}
+            <div className="bg-gradient-to-r from-gray-900 to-black text-white px-4 py-3 rounded-xl shadow-lg">
+              <div className="text-center">
+                <div className="text-xl md:text-2xl font-bold">-</div>
+                <div className="text-xs text-gray-300">Premium Products</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Breadcrumb */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <nav className="flex items-center text-sm text-gray-600">
-            <Link href="/" className="hover:text-blue-600 transition-colors">
+      {/* 2. BREADCRUMB - Shows immediately */}
+      <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <nav className="flex items-center text-sm text-gray-600 overflow-x-auto">
+            <Link href="/" className="hover:text-purple-600 transition-colors flex items-center whitespace-nowrap">
+              <Crown className="w-3 h-3 mr-1" />
               Home
             </Link>
-            <ChevronRight className="w-4 h-4 mx-2" />
-            <Link href="/categories" className="hover:text-blue-600 transition-colors">
-              Categories
+            <ChevronRight className="w-4 h-4 mx-2 text-gray-400 flex-shrink-0" />
+            <Link href="/categories" className="hover:text-purple-600 transition-colors whitespace-nowrap">
+              Collections
             </Link>
             {parentCategory && (
               <>
-                <ChevronRight className="w-4 h-4 mx-2" />
+                <ChevronRight className="w-4 h-4 mx-2 text-gray-400 flex-shrink-0" />
                 <Link 
                   href={`/categories/${parentCategory.slug}`}
-                  className="hover:text-blue-600 transition-colors"
+                  className="hover:text-purple-600 transition-colors whitespace-nowrap"
                 >
                   {parentCategory.name}
                 </Link>
               </>
             )}
-            <ChevronRight className="w-4 h-4 mx-2" />
-            <span className="text-gray-900 font-medium">{category.name}</span>
+            <ChevronRight className="w-4 h-4 mx-2 text-gray-400 flex-shrink-0" />
+            <span className="text-gray-900 font-medium truncate">
+              {category.name}
+            </span>
           </nav>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Subcategories */}
-        {subcategories.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Subcategories</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {subcategories.map(subcategory => (
-                <CategoryCard key={subcategory._id} category={subcategory} />
+      {/* 3. MAIN CONTENT */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        {/* Subcategories - Load progressively */}
+        <Suspense fallback={
+          <div className="mb-12 md:mb-16">
+            <div className="h-8 w-48 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg mb-6"></div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-xl"></div>
               ))}
             </div>
           </div>
-        )}
+        }>
+          <SubcategoriesContent categoryId={category._id} />
+        </Suspense>
 
-        {/* Products */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
+        {/* 4. PRODUCTS SECTION */}
+        <section className="mb-12 md:mb-16">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {category.name} Products
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                Products in {category.name}
               </h2>
-              <p className="text-gray-600">
-                Showing {productsData.products.length} of {productsData.total} products
+              <p className="text-gray-600 text-sm">
+                Premium products
               </p>
             </div>
 
-            {/* Sort - Using Client Component */}
-            <div>
+            <div className="flex items-center gap-4">
+              {/* Search */}
+              <form action={`/categories/${slug}`} method="GET" className="relative">
+                <input
+                  type="text"
+                  name="search"
+                  defaultValue={searchQuery}
+                  placeholder="Search products..."
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 w-48 md:w-64 text-sm"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                {searchQuery && (
+                  <Link 
+                    href={`/categories/${slug}`}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  >
+                    <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                  </Link>
+                )}
+              </form>
+
+              {/* Sort */}
               <SortSelect 
                 currentSort={sortBy}
                 categorySlug={slug}
@@ -153,85 +410,64 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             </div>
           </div>
 
-          {productsData.products.length > 0 ? (
-            <>
-              <ProductGrid products={productsData.products} />
-              
-              {/* Pagination */}
-              {productsData.totalPages > 1 && (
-                <div className="mt-12 flex justify-center">
-                  <div className="flex items-center space-x-2">
-                    {Array.from({ length: Math.min(5, productsData.totalPages) }, (_, i) => {
-                      const pageNum = i + 1;
-                      const isActive = pageNum === page;
-                      
-                      // Build URL with current parameters
-                      const params = new URLSearchParams();
-                      if (pageNum > 1) params.set('page', pageNum.toString());
-                      if (sortBy !== 'createdAt') params.set('sort', sortBy);
-                      
-                      const url = `/categories/${slug}${params.toString() ? `?${params.toString()}` : ''}`;
-                      
-                      return (
-                        <Link
-                          key={pageNum}
-                          href={url}
-                          className={`px-4 py-2 rounded-lg transition-colors ${
-                            isActive
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                          }`}
-                        >
-                          {pageNum}
-                        </Link>
-                      );
-                    })}
-                    
-                    {productsData.totalPages > 5 && (
-                      <>
-                        <span className="px-2 text-gray-500">...</span>
-                        <Link
-                          href={`/categories/${slug}?${new URLSearchParams({
-                            page: productsData.totalPages.toString(),
-                            ...(sortBy !== 'createdAt' && { sort: sortBy }),
-                          }).toString()}`}
-                          className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                          {productsData.totalPages}
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-12">
-              <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-              <p className="text-gray-500 mb-4">No products available in this category yet.</p>
-              <Link
-                href="/products"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Browse All Products
-              </Link>
-            </div>
-          )}
-        </div>
+          {/* PRODUCTS DISPLAY - With Suspense */}
+          <Suspense fallback={
+            <ProductGrid loading={true} variant="horizontal-mobile" />
+          }>
+            <ProductsContent 
+              slug={slug}
+              page={page}
+              sortBy={sortBy}
+              searchQuery={searchQuery}
+              categoryName={category.name}
+            />
+          </Suspense>
+        </section>
 
-        {/* Sibling Categories */}
-        {siblingCategories.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Categories</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {siblingCategories.map(sibling => (
-                <CategoryCard key={sibling._id} category={sibling} />
+        {/* 5. RELATED CATEGORIES - Load progressively */}
+        <Suspense fallback={
+          <div className="mb-12 md:mb-16">
+            <div className="h-8 w-48 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse rounded-lg mb-6"></div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="aspect-square bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse rounded-xl"></div>
               ))}
             </div>
           </div>
-        )}
+        }>
+          <RelatedCategoriesContent 
+            categoryId={category._id}
+            parentId={category.parentId} // This can be null or undefined
+          />
+        </Suspense>
+
+        {/* 6. PREMIUM CTA */}
+        <section>
+          <div className="bg-gradient-to-r from-gray-900 to-black rounded-2xl p-8 text-center">
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-4">
+              Need More Options?
+            </h2>
+            <p className="text-gray-300 text-sm md:text-base mb-6 max-w-2xl mx-auto">
+              Explore our complete collection of premium art supplies and stationery
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link 
+                href="/products"
+                className="inline-flex items-center justify-center px-6 py-3 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-all duration-300 group"
+              >
+                Shop All Products
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link 
+                href="/categories"
+                className="inline-flex items-center justify-center px-6 py-3 border-2 border-white text-white font-medium rounded-lg hover:bg-white/10 transition-all duration-300"
+              >
+                All Collections
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
