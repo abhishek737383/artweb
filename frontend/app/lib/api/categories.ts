@@ -1,3 +1,4 @@
+// categoryApi.ts
 import { Category, CreateCategoryDto, UpdateCategoryDto } from '../../../types/category';
 
 export interface ApiResponse<T> {
@@ -27,20 +28,36 @@ class CategoryAPI {
   // Normalize category data
   private normalizeCategory(data: any): Category {
     if (!data) return data;
-    
+
+    // Normalize image: could be string (old) or object { url, publicId, altText }
+    let image: any = null;
+    if (typeof data.image === 'string') {
+      image = { url: data.image, publicId: undefined, altText: data.name || '' };
+    } else if (data.image && typeof data.image === 'object') {
+      image = {
+        url: data.image.url,
+        publicId: data.image.publicId,
+        altText: data.image.altText ?? data.name ?? ''
+      };
+    } else {
+      image = null;
+    }
+
+    const parentId = data.parentId ?? data.parentId === '' ? null : data.parentId;
+
     return {
-      _id: data._id || data.id,
-      id: data.id || data._id,
+      _id: data._id ? String(data._id) : (data.id ? String(data.id) : ''),
+      id: data.id ? String(data.id) : (data._id ? String(data._id) : ''),
       name: data.name || '',
       slug: data.slug || '',
-      description: data.description,
-      image: data.image,
-      parentId: data.parentId || null,
+      description: data.description || '',
+      image,
+      parentId: parentId ? String(parentId) : null,
       isActive: data.isActive !== false,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
       __v: data.__v,
-    };
+    } as Category;
   }
 
   // Get all categories WITH CACHING
@@ -51,9 +68,7 @@ class CategoryAPI {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/categories`, {
-        next: { revalidate: 300 } // Revalidate every 5 minutes
-      });
+      const response = await fetch(`${this.baseUrl}/categories`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch categories: ${response.status}`);
@@ -66,7 +81,7 @@ class CategoryAPI {
       if (result.success && Array.isArray(result.data)) {
         categories = result.data.map(cat => this.normalizeCategory(cat));
       } else if (Array.isArray(result)) {
-        categories = result.map(cat => this.normalizeCategory(cat));
+        categories = (result as any[]).map(cat => this.normalizeCategory(cat));
       }
       
       // Update cache
@@ -91,9 +106,7 @@ class CategoryAPI {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/categories/slug/${slug}`, {
-        next: { revalidate: 300 } // Revalidate every 5 minutes
-      });
+      const response = await fetch(`${this.baseUrl}/categories/slug/${encodeURIComponent(slug)}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch category by slug: ${response.status}`);
@@ -129,9 +142,7 @@ class CategoryAPI {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/categories/${id}`, {
-        next: { revalidate: 300 }
-      });
+      const response = await fetch(`${this.baseUrl}/categories/${encodeURIComponent(id)}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch category: ${response.status}`);
@@ -240,7 +251,7 @@ class CategoryAPI {
         if (data.isActive !== undefined) formData.append('isActive', String(data.isActive));
         formData.append('image', data.imageFile);
         
-        response = await fetch(`${this.baseUrl}/categories/${id}`, {
+        response = await fetch(`${this.baseUrl}/categories/${encodeURIComponent(id)}`, {
           method: 'PUT',
           body: formData,
         });
@@ -254,7 +265,7 @@ class CategoryAPI {
         }
         if (data.isActive !== undefined) payload.isActive = data.isActive;
         
-        response = await fetch(`${this.baseUrl}/categories/${id}`, {
+        response = await fetch(`${this.baseUrl}/categories/${encodeURIComponent(id)}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -286,7 +297,7 @@ class CategoryAPI {
   // Delete category
   async delete(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/categories/${id}`, {
+      const response = await fetch(`${this.baseUrl}/categories/${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
 

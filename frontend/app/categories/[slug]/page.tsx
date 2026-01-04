@@ -130,19 +130,19 @@ async function ProductsContent({
 
   return (
     <>
-      {/* Mobile: Horizontal Scroll */}
+      {/* Mobile: Grid with 2 columns */}
       <div className="md:hidden">
-        <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 pl-4">
+        <div className="grid grid-cols-2 gap-4">
           {productsData.products.map((product) => {
             const firstImage = product.images?.[0];
             const imageUrl = getImageUrl(firstImage);
             const imageAlt = getImageAlt(firstImage, product.name);
             
             return (
-              <div key={product._id} className="flex-shrink-0 w-48">
-                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <div key={product._id} className="w-full">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm h-full">
                   {/* Product Image */}
-                  <div className="relative h-40 w-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg mb-3 overflow-hidden">
+                  <div className="relative aspect-square w-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg mb-3 overflow-hidden">
                     {imageUrl ? (
                       <img 
                         src={imageUrl} 
@@ -156,7 +156,7 @@ async function ProductsContent({
                   </div>
                   
                   {/* Product Info */}
-                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 text-sm">
+                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 text-sm min-h-[40px]">
                     {product.name}
                   </h3>
                   <p className="text-sm font-bold text-gray-900 mb-3">

@@ -1,3 +1,4 @@
+// productApi.ts
 import { Product, CreateProductDto, UpdateProductDto, ProductImage } from '../../../types/product';
 
 export interface ApiResponse<T> {
@@ -47,36 +48,62 @@ class ProductAPI {
         images: [],
         createdAt: '',
         updatedAt: ''
-      };
+      } as Product;
     }
-    
+
+    // Normalize images: ensure each image has url, publicId, altText, isPrimary
+    const images = Array.isArray(data.images) ? data.images.map((img: any, idx: number) => {
+      if (!img) return null;
+      if (typeof img === 'string') {
+        return {
+          url: img,
+          publicId: undefined,
+          altText: data.name || `Image ${idx + 1}`,
+          isPrimary: idx === 0
+        } as ProductImage;
+      }
+      return {
+        url: img.url,
+        publicId: img.publicId,
+        altText: img.altText ?? data.name ?? `Image ${idx + 1}`,
+        isPrimary: !!img.isPrimary,
+        order: typeof img.order === 'number' ? img.order : idx,
+        format: img.format,
+        width: img.width,
+        height: img.height
+      } as ProductImage;
+    }).filter(Boolean) : [];
+
     return {
-      _id: data._id || data.id,
-      id: data.id || data._id || '',
+      _id: data._id ? String(data._id) : (data.id ? String(data.id) : ''),
+      id: data.id ? String(data.id) : (data._id ? String(data._id) : ''),
       name: data.name || '',
       slug: data.slug || '',
       description: data.description || '',
-      shortDescription: data.shortDescription,
-      price: data.price || 0,
-      compareAtPrice: data.compareAtPrice,
-      costPrice: data.costPrice,
+      shortDescription: data.shortDescription || '',
+      price: data.price !== undefined ? Number(data.price) : 0,
+      compareAtPrice: data.compareAtPrice !== undefined ? Number(data.compareAtPrice) : undefined,
+      costPrice: data.costPrice !== undefined ? Number(data.costPrice) : undefined,
       sku: data.sku || '',
-      barcode: data.barcode,
-      stock: data.stock || 0,
+      barcode: data.barcode || undefined,
+      stock: data.stock !== undefined ? Number(data.stock) : 0,
       weight: data.weight,
       dimensions: data.dimensions,
-      categoryId: data.categoryId || data.category?.id || null,
-      category: data.category,
-      tags: data.tags || [],
+      categoryId: data.categoryId ? String(data.categoryId) : (data.category?.id ? String(data.category.id) : null),
+      category: data.category ? {
+        ...data.category,
+        id: data.category.id ? String(data.category.id) : (data.category._id ? String(data.category._id) : '')
+      } : null,
+      tags: Array.isArray(data.tags) ? data.tags : [],
       isActive: data.isActive !== false,
-      isFeatured: data.isFeatured || false,
-      isBestSeller: data.isBestSeller || false,
+      isFeatured: !!data.isFeatured,
+      isBestSeller: !!data.isBestSeller,
       metaTitle: data.metaTitle,
       metaDescription: data.metaDescription,
-      images: data.images || [],
+      images,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
-    };
+    } as Product;
   }
 
   // Get products with filters
@@ -96,7 +123,7 @@ class ProductAPI {
         }
       });
 
-      const url = `${this.baseUrl}/products?${queryParams.toString()}`;
+      const url = `${this.baseUrl}/products${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -110,8 +137,8 @@ class ProductAPI {
       let total = 0;
       let totalPages = 1;
 
-      if (result.success) {
-        if (Array.isArray(result.data?.products)) {
+      if (result.success && result.data) {
+        if (Array.isArray(result.data.products)) {
           products = result.data.products.map((p: any) => this.normalizeProduct(p));
           total = result.data.total || products.length;
           totalPages = result.data.totalPages || 1;
@@ -120,7 +147,7 @@ class ProductAPI {
           total = products.length;
         }
       }
-      
+
       return {
         products,
         total,
@@ -148,7 +175,7 @@ class ProductAPI {
         return null;
       }
       
-      const response = await fetch(`${this.baseUrl}/products/${id}`);
+      const response = await fetch(`${this.baseUrl}/products/${encodeURIComponent(id)}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch product: ${response.status}`);
@@ -200,7 +227,7 @@ class ProductAPI {
   // Create product
   async create(payload: CreateProductDto): Promise<Product | null> {
     try {
-      // Clean the payload
+      // Clean the payload (same as before)
       const cleanPayload: any = {
         name: payload.name,
         description: payload.description || '',
@@ -278,7 +305,7 @@ class ProductAPI {
         }
       });
       
-      const response = await fetch(`${this.baseUrl}/products/${id}`, {
+      const response = await fetch(`${this.baseUrl}/products/${encodeURIComponent(id)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -306,7 +333,7 @@ class ProductAPI {
   // Delete product
   async delete(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/products/${id}`, {
+      const response = await fetch(`${this.baseUrl}/products/${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
 
@@ -351,7 +378,11 @@ class ProductAPI {
           altText: img.altText || `Product Image ${index + 1}`,
           publicId: img.publicId || `img-${Date.now()}-${index}`,
           isPrimary: img.isPrimary || index === 0,
-        }));
+          order: typeof img.order === 'number' ? img.order : index,
+          format: img.format,
+          width: img.width,
+          height: img.height
+        } as ProductImage));
       }
       
       throw new Error(result.message || 'Failed to upload images');
