@@ -1,3 +1,4 @@
+// app/categories/[slug]/page.tsx  (or wherever your route file lives)
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -8,14 +9,14 @@ import {
   Search,
   X,
   ArrowRight,
-  Package
+  Package,
+  Filter
 } from 'lucide-react';
 import { categoryApi } from '../../lib/api/categories';
 import { productApi } from '../../lib/api/products';
 import CategoryCard from '../../components/shared/CategoryCard';
 import ProductGrid from '../../components/shared/ProductGrid';
 import SortSelect from '../../components/shared/SortSelect';
-import { Suspense } from 'react';
 
 interface CategoryPageProps {
   params: Promise<{
@@ -28,8 +29,7 @@ interface CategoryPageProps {
   }>;
 }
 
-// Static generation for faster loading
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 3600;
 export const dynamicParams = false;
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
@@ -42,7 +42,6 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   };
 }
 
-// Helper function to get image URL safely
 function getImageUrl(image: any): string {
   if (!image) return '';
   
@@ -57,14 +56,21 @@ function getImageUrl(image: any): string {
   return '';
 }
 
-// Helper function to get image alt text
 function getImageAlt(image: any, defaultAlt: string): string {
   if (!image || typeof image !== 'object') return defaultAlt;
   
   return image.altText || image.alt || defaultAlt;
 }
 
-// Products Content Component
+function MobileFilterButton() {
+  return (
+    <button className="md:hidden flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium text-sm w-full">
+      <Filter className="w-4 h-4" />
+      Filters
+    </button>
+  );
+}
+
 async function ProductsContent({ 
   categoryId,
   categoryName,
@@ -80,7 +86,6 @@ async function ProductsContent({
   searchQuery: string;
   slug: string;
 }) {
-  // Fetch products
   const productsData = await productApi.getProducts({
     page,
     limit: 12,
@@ -132,7 +137,7 @@ async function ProductsContent({
     <>
       {/* Mobile: Grid with 2 columns */}
       <div className="md:hidden">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {productsData.products.map((product) => {
             const firstImage = product.images?.[0];
             const imageUrl = getImageUrl(firstImage);
@@ -140,9 +145,8 @@ async function ProductsContent({
             
             return (
               <div key={product._id} className="w-full">
-                <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm h-full">
-                  {/* Product Image */}
-                  <div className="relative aspect-square w-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg mb-3 overflow-hidden">
+                <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm h-full">
+                  <div className="relative aspect-square w-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-md mb-2 overflow-hidden">
                     {imageUrl ? (
                       <img 
                         src={imageUrl} 
@@ -155,15 +159,14 @@ async function ProductsContent({
                     )}
                   </div>
                   
-                  {/* Product Info */}
-                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 text-sm min-h-[40px]">
+                  <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 text-xs leading-tight min-h-[32px]">
                     {product.name}
                   </h3>
-                  <p className="text-sm font-bold text-gray-900 mb-3">
+                  <p className="text-xs font-bold text-gray-900 mb-2">
                     ₹{product.price.toLocaleString()}
                   </p>
                   
-                  <button className="w-full py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all">
+                  <button className="w-full py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium rounded-md hover:from-purple-700 hover:to-pink-700 transition-all">
                     Add to Cart
                   </button>
                 </div>
@@ -244,7 +247,6 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
   
-  // Fetch category data (cached)
   const category = await categoryApi.getBySlug(slug);
   
   if (!category || !category.isActive) {
@@ -255,27 +257,22 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const sortBy = resolvedSearchParams.sort || 'createdAt';
   const searchQuery = resolvedSearchParams.search || '';
 
-  // Fetch all categories for breadcrumb and subcategories
   const categories = await categoryApi.getAll();
   
-  // Get parent category
   const parentCategory = category.parentId 
     ? categories.find(cat => cat._id === category.parentId)
     : null;
 
-  // Get subcategories
   const subcategories = categories.filter(cat => 
     cat.isActive && cat.parentId === category._id
   );
 
-  // Get related categories
   const relatedCategories = category.parentId 
     ? categories.filter(cat => 
         cat.isActive && cat.parentId === category.parentId && cat._id !== category._id
       )
     : [];
 
-  // Calculate product count (we'll get this from products data)
   const productsData = await productApi.getProducts({
     page: 1,
     limit: 1,
@@ -285,7 +282,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   return (
     <main className="min-h-screen bg-white">
-      {/* 1. HEADER - Shows immediately */}
+      {/* HEADER */}
       <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 pb-8 md:pb-12">
           <div className="flex items-center gap-4">
@@ -309,7 +306,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         </div>
       </div>
 
-      {/* 2. BREADCRUMB - Shows immediately */}
+      {/* BREADCRUMB */}
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <nav className="flex items-center text-sm text-gray-600 overflow-x-auto">
@@ -340,9 +337,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         </div>
       </div>
 
-      {/* 3. MAIN CONTENT */}
+      {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        {/* Subcategories - Load immediately */}
+        {/* Subcategories */}
         {subcategories.length > 0 && (
           <section className="mb-12 md:mb-16">
             <div className="flex items-center justify-between mb-6">
@@ -371,7 +368,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           </section>
         )}
 
-        {/* 4. PRODUCTS SECTION */}
+        {/* PRODUCTS SECTION */}
         <section className="mb-12 md:mb-16">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
@@ -383,8 +380,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
-              {/* Search */}
+            {/* Desktop Controls (unchanged) */}
+            <div className="hidden md:flex items-center gap-4">
               <form action={`/categories/${slug}`} method="GET" className="relative">
                 <input
                   type="text"
@@ -404,11 +401,51 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                 )}
               </form>
 
-              {/* Sort */}
               <SortSelect 
                 currentSort={sortBy}
                 categorySlug={slug}
               />
+            </div>
+
+            {/* Mobile Controls */}
+            <div className="md:hidden w-full">
+              <div className="flex flex-col gap-3">
+                {/* Mobile Filter Button */}
+                <MobileFilterButton />
+                
+                {/* Search and Sort Container for Mobile */}
+                <div className="flex flex-col xs:flex-row gap-3 w-full">
+                  {/* Search for Mobile */}
+                  <div className="relative flex-1">
+                    <form action={`/categories/${slug}`} method="GET" className="w-full">
+                      <input
+                        type="text"
+                        name="search"
+                        defaultValue={searchQuery}
+                        placeholder="Search products..."
+                        className="pl-10 pr-8 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 w-full text-sm"
+                      />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      {searchQuery && (
+                        <Link 
+                          href={`/categories/${slug}`}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                        >
+                          <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                        </Link>
+                      )}
+                    </form>
+                  </div>
+
+                  {/* Sort for Mobile */}
+                  <div className="w-full xs:w-auto">
+                    <SortSelect 
+                      currentSort={sortBy}
+                      categorySlug={slug}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -423,7 +460,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           />
         </section>
 
-        {/* 5. RELATED CATEGORIES */}
+        {/* RELATED CATEGORIES */}
         {relatedCategories.length > 0 && (
           <section className="mb-12 md:mb-16">
             <div className="flex items-center justify-between mb-6">
@@ -449,7 +486,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           </section>
         )}
 
-        {/* 6. PREMIUM CTA */}
+        {/* PREMIUM CTA */}
         <section>
           <div className="bg-gradient-to-r from-gray-900 to-black rounded-2xl p-8 text-center">
             <h2 className="text-xl md:text-2xl font-bold text-white mb-4">
