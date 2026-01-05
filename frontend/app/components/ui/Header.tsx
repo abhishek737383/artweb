@@ -19,9 +19,22 @@ import {
   Tag,
   Info,
   Mail,
-  PenTool,
-  BookOpen
+  PenTool
 } from 'lucide-react';
+import { Inter, Playfair_Display } from 'next/font/google';
+
+// Import professional fonts
+const inter = Inter({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-inter'
+});
+
+const playfair = Playfair_Display({ 
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-playfair'
+});
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -92,295 +105,501 @@ export default function Header() {
 
   return (
     <>
-      <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${inter.variable} ${playfair.variable} font-sans ${
         isScrolled 
-          ? 'bg-white/98 backdrop-blur-md shadow-lg border-b border-gray-200' 
-          : 'bg-white border-b border-gray-200'
+          ? 'bg-white/98 backdrop-blur-sm shadow-md border-b border-gray-100' 
+          : 'bg-white border-b border-gray-100'
       }`}>
-        <div className="container  px-2 sm:px-6 lg:px-8">
-          {/* Main Header Row - Logo | Search | Icons */}
-          <div className="flex items-center h-20 lg:h-24">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Link 
-                href="/" 
-                className="flex items-center space-x-3 group"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <PenTool className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full border-2 border-white" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
-                    Art Plaza
-                  </span>
-                  <span className="text-xs text-amber-600 font-medium tracking-wider">PREMIUM STATIONERY</span>
-                </div>
-              </Link>
-            </div>
-
-            {/* Centered Search Box - Desktop */}
-            <div className="hidden lg:flex flex-1 mx-8">
-              <form onSubmit={handleSearch} className="w-full max-w-4xl mx-auto">
-                <div className={`relative transition-all duration-300 ${isSearchFocused ? 'scale-[1.02] shadow-xl' : 'shadow-lg'}`}>
-                  <input
-                    type="text"
-                    placeholder="Find premium pens, notebooks, art supplies..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setIsSearchFocused(false)}
-                    className="w-full px-8 py-4 pl-14 bg-white border-2 border-gray-300/80 rounded-2xl focus:outline-none focus:border-amber-400 focus:ring-0 text-gray-800 placeholder-gray-500 transition-all duration-300"
-                  />
-                  <div className="absolute left-5 top-1/2 transform -translate-y-1/2 flex items-center">
-                    <Search className="w-5 h-5 text-amber-500" />
-                    <div className="ml-3 w-px h-6 bg-gradient-to-b from-gray-300/50 to-transparent" />
-                  </div>
-                  <button
-                    type="submit"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-md hover:shadow-lg font-semibold"
-                  >
-                    Search
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Right side icons */}
-            <div className="flex items-center space-x-2 lg:space-x-5 ml-auto">
-              {/* Wishlist */}
-              <Link 
-                href="/wishlist" 
-                className="relative group"
-              >
-                <div className="relative p-2 rounded-xl hover:bg-gray-100/50 transition-all duration-300">
-                  <Heart className="w-6 h-6 text-gray-600 group-hover:text-rose-500 transition-all duration-300" />
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-sm">
-                    2
-                  </span>
-                </div>
-              </Link>
-
-              {/* Cart */}
-              <Link 
-                href="/cart" 
-                className="relative group"
-              >
-                <div className="relative p-2 rounded-xl hover:bg-gray-100/50 transition-all duration-300">
-                  <ShoppingCart className="w-6 h-6 text-gray-600 group-hover:text-amber-600 transition-all duration-300" />
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-sm">
-                    3
-                  </span>
-                </div>
-              </Link>
-
-              {/* User Account */}
-              {user ? (
-                <div className="relative" ref={userMenuRef}>
-                  <button 
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-3 p-2 hover:bg-gray-100/50 rounded-xl transition-all duration-300 group"
-                  >
-                    <div className="relative">
-                      <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-                        {user.name?.charAt(0).toUpperCase()}
-                      </div>
+        {/* Desktop Layout */}
+        <div className="hidden lg:block">
+          {/* Top Row: Logo, Search, User Details */}
+          <div className="w-full px-10 xl:px-16 2xl:px-20">
+            <div className="flex items-center justify-between h-20 2xl:h-24">
+              {/* Logo and Brand Name */}
+              <div className="flex items-center flex-shrink-0">
+                <Link 
+                  href="/" 
+                  className="flex items-center space-x-5 group transition-all duration-300 hover:scale-[1.02]"
+                >
+                  {/* Professional Logo Container */}
+                  <div className="relative">
+                    <div className="w-18 h-18 2xl:w-24 2xl:h-19 rounded-2xl overflow-hidden bg-white shadow-xl border-2 border-amber-100 group-hover:border-amber-200 transition-all duration-300">
+                      <img 
+                        src="/logo.jpg" 
+                        alt="Art Plaza - Premium Stationery"
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `
+                              <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-500 to-amber-600">
+                                <svg class="w-10 h-10 2xl:w-12 2xl:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                              </div>
+                            `;
+                          }
+                        }}
+                      />
                     </div>
-                    <div className="hidden lg:flex flex-col items-start">
-                      <span className="text-sm font-semibold text-gray-900">{user.name}</span>
-                      <span className="text-xs text-gray-500">Premium Member</span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 transition-all duration-300 ${isUserMenuOpen ? 'rotate-180 text-amber-600' : 'text-gray-500'}`} />
-                  </button>
+                    {/* Accent dot */}
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-full border-2 border-white shadow-lg" />
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                  
+                  {/* Brand Name with Professional Font */}
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-3xl 2xl:text-4xl font-bold text-gray-900 tracking-tight font-playfair">
+                      Art Plaza
+                    </span>
+                    <span className="text-xs text-amber-600 font-medium tracking-[0.3em] uppercase">
+                      Premium Stationery
+                    </span>
+                  </div>
+                </Link>
+              </div>
 
-                  {/* User Dropdown */}
-                  {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-3 z-50 animate-in slide-in-from-top-5 duration-300">
-                      <div className="px-4 py-3 border-b border-gray-200/30">
-                        <div className="font-bold text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500 truncate">{user.email}</div>
+              {/* Center: Professional Search Box */}
+              <div className="flex-1 max-w-2xl xl:max-w-3xl 2xl:max-w-4xl mx-10 2xl:mx-16">
+                <form onSubmit={handleSearch} className="relative">
+                  <div className={`relative transition-all duration-300 ${isSearchFocused ? 'shadow-xl scale-[1.01]' : 'shadow-lg'}`}>
+                    <input
+                      type="text"
+                      placeholder="Find premium pens, notebooks, art supplies, and more..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={() => setIsSearchFocused(true)}
+                      onBlur={() => setIsSearchFocused(false)}
+                      className="w-full px-8 py-3.5 pl-16 bg-white border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-3 focus:ring-amber-400/30 focus:border-amber-400 text-gray-800 placeholder-gray-500 transition-all duration-300 text-base"
+                    />
+                    <div className="absolute left-6 top-1/2 transform -translate-y-1/2 flex items-center">
+                      <Search className="w-5 h-5 text-amber-500" />
+                      <div className="ml-4 w-px h-6 bg-gradient-to-b from-gray-300/50 to-transparent" />
+                    </div>
+                    <button
+                      type="submit"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 px-7 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-md hover:shadow-lg font-semibold hover:scale-105 active:scale-95"
+                    >
+                      Search
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Right: User Details with Professional Icons */}
+              <div className="flex items-center space-x-4 2xl:space-x-6">
+                {/* Wishlist */}
+                <Link 
+                  href="/wishlist" 
+                  className="relative group"
+                >
+                  <div className="p-2.5 rounded-xl hover:bg-rose-50/50 transition-all duration-300 group hover:shadow-md">
+                    <Heart className="w-5 h-5 2xl:w-6 2xl:h-6 text-gray-600 group-hover:text-rose-500 group-hover:scale-110 transition-all duration-300" />
+                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-md group-hover:scale-110 transition-all duration-300">
+                      2
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Cart */}
+                <Link 
+                  href="/cart" 
+                  className="relative group"
+                >
+                  <div className="p-2.5 rounded-xl hover:bg-amber-50/50 transition-all duration-300 group hover:shadow-md">
+                    <ShoppingCart className="w-5 h-5 2xl:w-6 2xl:h-6 text-gray-600 group-hover:text-amber-600 group-hover:scale-110 transition-all duration-300" />
+                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-md group-hover:scale-110 transition-all duration-300">
+                      3
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Professional User Account */}
+                {user ? (
+                  <div className="relative" ref={userMenuRef}>
+                    <button 
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-xl transition-all duration-300 group"
+                    >
+                      <div className="relative">
+                        <div className="w-10 h-10 2xl:w-11 2xl:h-11 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-lg transition-all duration-300">
+                          {user.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm" />
                       </div>
-                      
-                      <div className="py-2">
-                        <Link
-                          href="/profile"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-amber-50 rounded-lg mx-2 transition-colors duration-200"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          <User className="w-4 h-4 mr-3 text-amber-600" />
-                          <span className="font-medium">My Profile</span>
-                        </Link>
-                        <Link
-                          href="/orders"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-amber-50 rounded-lg mx-2 transition-colors duration-200"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          <Package className="w-4 h-4 mr-3 text-amber-600" />
-                          <span className="font-medium">My Orders</span>
-                        </Link>
-                        <Link
-                          href="/wishlist"
-                          className="flex items-center px-4 py-3 text-gray-700 hover:bg-amber-50 rounded-lg mx-2 transition-colors duration-200"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          <Heart className="w-4 h-4 mr-3 text-amber-600" />
-                          <span className="font-medium">Wishlist</span>
-                        </Link>
-                        {user.role === 'admin' && (
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm font-semibold text-gray-900">{user.name}</span>
+                        <span className="text-xs text-gray-500 font-medium">Premium Member</span>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 transition-all duration-300 ${isUserMenuOpen ? 'rotate-180 text-amber-600' : 'text-gray-500 group-hover:text-amber-600'}`} />
+                    </button>
+
+                    {/* Professional User Dropdown */}
+                    {isUserMenuOpen && (
+                      <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-4 z-50 animate-in slide-in-from-top-5 duration-300">
+                        <div className="px-5 py-4 border-b border-gray-200/30 bg-gradient-to-r from-amber-50/50 to-orange-50/50 rounded-t-2xl">
+                          <div className="font-bold text-gray-900 text-lg">{user.name}</div>
+                          <div className="text-sm text-gray-600 truncate">{user.email}</div>
+                          <div className="text-xs text-amber-600 font-semibold mt-2 bg-white/80 px-3 py-1.5 rounded-full inline-flex items-center">
+                            <span className="w-2 h-2 bg-amber-400 rounded-full mr-2"></span>
+                            Premium Member
+                          </div>
+                        </div>
+                        
+                        <div className="py-3 space-y-1">
                           <Link
-                            href="/admin"
-                            className="flex items-center px-4 py-3 text-amber-600 hover:bg-amber-50 rounded-lg mx-2 transition-colors duration-200"
+                            href="/profile"
+                            className="flex items-center px-5 py-3.5 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl mx-2 transition-all duration-300 group"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
-                            <Settings className="w-4 h-4 mr-3" />
-                            <span className="font-medium">Admin Panel</span>
+                            <div className="p-2 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors duration-300">
+                              <User className="w-4 h-4 text-amber-600" />
+                            </div>
+                            <div className="ml-3">
+                              <span className="font-semibold text-sm">My Profile</span>
+                              <div className="text-xs text-gray-500">Personal information</div>
+                            </div>
                           </Link>
-                        )}
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center w-full px-4 py-3 text-rose-600 hover:bg-rose-50 rounded-lg mx-2 transition-colors duration-200 mt-2"
-                        >
-                          <LogOut className="w-4 h-4 mr-3" />
-                          <span className="font-medium">Sign out</span>
-                        </button>
+                          <Link
+                            href="/orders"
+                            className="flex items-center px-5 py-3.5 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl mx-2 transition-all duration-300 group"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <div className="p-2 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors duration-300">
+                              <Package className="w-4 h-4 text-amber-600" />
+                            </div>
+                            <div className="ml-3">
+                              <span className="font-semibold text-sm">My Orders</span>
+                              <div className="text-xs text-gray-500">Track & manage orders</div>
+                            </div>
+                          </Link>
+                          <Link
+                            href="/wishlist"
+                            className="flex items-center px-5 py-3.5 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl mx-2 transition-all duration-300 group"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <div className="p-2 bg-rose-100 rounded-lg group-hover:bg-rose-200 transition-colors duration-300">
+                              <Heart className="w-4 h-4 text-rose-600" />
+                            </div>
+                            <div className="ml-3">
+                              <span className="font-semibold text-sm">Wishlist</span>
+                              <div className="text-xs text-gray-500">Saved items (2)</div>
+                            </div>
+                          </Link>
+                          {user.role === 'admin' && (
+                            <Link
+                              href="/admin"
+                              className="flex items-center px-5 py-3.5 text-amber-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl mx-2 transition-all duration-300 group"
+                              onClick={() => setIsUserMenuOpen(false)}
+                            >
+                              <div className="p-2 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors duration-300">
+                                <Settings className="w-4 h-4 text-amber-600" />
+                              </div>
+                              <div className="ml-3">
+                                <span className="font-semibold text-sm">Admin Panel</span>
+                                <div className="text-xs text-amber-600">Store management</div>
+                              </div>
+                            </Link>
+                          )}
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center w-full px-5 py-3.5 text-rose-600 hover:bg-gradient-to-r hover:from-rose-50 hover:to-pink-50 rounded-xl mx-2 transition-all duration-300 group mt-3"
+                          >
+                            <div className="p-2 bg-rose-100 rounded-lg group-hover:bg-rose-200 transition-colors duration-300">
+                              <LogOut className="w-4 h-4" />
+                            </div>
+                            <div className="ml-3">
+                              <span className="font-semibold text-sm">Sign out</span>
+                              <div className="text-xs text-rose-500">Logout from account</div>
+                            </div>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="hidden lg:flex items-center space-x-4">
-                  <Link 
-                    href="/login" 
-                    className="px-5 py-2.5 text-gray-700 hover:text-amber-700 font-medium rounded-xl hover:bg-gray-100/50 transition-all duration-300"
-                  >
-                    Sign in
-                  </Link>
-                  <Link 
-                    href="/register" 
-                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
-                  >
-                    Join Now
-                  </Link>
-                </div>
-              )}
-
-              {/* Mobile menu button */}
-              <button
-                ref={mobileMenuButtonRef}
-                className="lg:hidden p-2 text-gray-600 hover:text-amber-600 hover:bg-gray-100/50 rounded-xl transition-colors duration-300"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? (
-                  <X className="w-6 h-6" />
+                    )}
+                  </div>
                 ) : (
-                  <Menu className="w-6 h-6" />
+                  <div className="flex items-center space-x-4">
+                    <Link 
+                      href="/login" 
+                      className="px-5 py-2.5 text-gray-700 hover:text-amber-700 font-medium rounded-xl hover:bg-gray-50/50 transition-all duration-300 border border-gray-300 hover:border-amber-300 hover:shadow-md"
+                    >
+                      Sign in
+                    </Link>
+                    <Link 
+                      href="/register" 
+                      className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold hover:scale-105 active:scale-95"
+                    >
+                      Join Now
+                    </Link>
+                  </div>
                 )}
-              </button>
+              </div>
             </div>
           </div>
 
-          {/* Navigation Tabs - Below main row */}
-          <div className="hidden lg:flex justify-center items-center pb-4">
-            <nav className="flex items-center space-x-8">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`group relative py-3 transition-all duration-300 ${
-                    pathname === item.href
-                      ? 'text-amber-700'
-                      : 'text-gray-700 hover:text-amber-600'
-                  }`}
+          {/* Bottom Row: Professional Navigation Tabs */}
+          <div className="border-t border-gray-100 bg-gradient-to-r from-amber-50/30 via-white to-amber-50/30">
+            <div className="w-full px-10 xl:px-16 2xl:px-20">
+              <nav className="flex items-center justify-center space-x-12 xl:space-x-16 py-3">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`group relative py-3 px-1 transition-all duration-300 font-medium ${
+                      pathname === item.href
+                        ? 'text-amber-700'
+                        : 'text-gray-700 hover:text-amber-600'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <item.icon className={`w-4 h-4 transition-colors duration-300 ${
+                        pathname === item.href ? 'text-amber-600' : 'text-gray-500 group-hover:text-amber-500'
+                      }`} />
+                      <span className="text-base tracking-wide">{item.name}</span>
+                    </div>
+                    
+                    {/* Professional Active indicator */}
+                    {pathname === item.href && (
+                      <>
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-amber-500 rounded-t-full" />
+                        <div className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-amber-400 rotate-45" />
+                      </>
+                    )}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className="lg:hidden">
+          {/* Top Row: Logo, Name, Icons, Menu */}
+          <div className="w-full px-4">
+            <div className="flex items-center justify-between h-16">
+              {/* Left: Logo and Brand Name */}
+              <div className="flex items-center flex-shrink-0">
+                <Link 
+                  href="/" 
+                  className="flex items-center space-x-3 group"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <div className="flex items-center space-x-2">
-                    <item.icon className={`w-4 h-4 transition-colors duration-300 ${
-                      pathname === item.href ? 'text-amber-600' : 'text-gray-500 group-hover:text-amber-500'
-                    }`} />
-                    <span className="font-medium tracking-wide text-lg">{item.name}</span>
+                  {/* Mobile Logo */}
+                  <div className="w-19 h-15 rounded-xl overflow-hidden bg-white shadow-lg border border-amber-100">
+                    <img 
+                      src="/logo.jpg" 
+                      alt="Art Plaza"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-500 to-amber-600">
+                              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                              </svg>
+                            </div>
+                          `;
+                        }
+                      }}
+                    />
                   </div>
                   
-                  {/* Hover line effect */}
-                  <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent transition-all duration-300 ${
-                    pathname === item.href 
-                      ? 'opacity-100 scale-x-100' 
-                      : 'opacity-0 scale-x-0 group-hover:opacity-100 group-hover:scale-x-100'
-                  }`} />
-                  
-                  {/* Active indicator */}
-                  {pathname === item.href && (
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-                  )}
+                  {/* Mobile Brand Name */}
+                  <div className="flex flex-col">
+                    <span className="text-xl font-bold text-gray-900 font-playfair">Art Plaza</span>
+                    <span className="text-xs text-amber-600 font-medium tracking-wider">Premium</span>
+                  </div>
                 </Link>
-              ))}
-            </nav>
+              </div>
+
+              {/* Right: Icons and Menu */}
+              <div className="flex items-center space-x-2">
+                {/* Wishlist */}
+                <Link 
+                  href="/wishlist" 
+                  className="relative p-2"
+                >
+                  <Heart className="w-5 h-5 text-gray-600" />
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold shadow-sm">
+                    2
+                  </span>
+                </Link>
+
+                {/* Cart */}
+                <Link 
+                  href="/cart" 
+                  className="relative p-2"
+                >
+                  <ShoppingCart className="w-5 h-5 text-gray-600" />
+                  <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold shadow-sm">
+                    3
+                  </span>
+                </Link>
+
+                {/* Mobile Menu Button */}
+                <button
+                  ref={mobileMenuButtonRef}
+                  className="p-2.5 text-gray-600 hover:text-amber-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <Menu className="w-6 h-6" />
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Mobile Search */}
-          <div className="lg:hidden py-4">
+          {/* Bottom Row: Search Box (Always Visible) */}
+          <div className="border-t border-gray-100 bg-gradient-to-r from-amber-50/50 to-orange-50/50 py-3 px-4">
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 placeholder="Search premium stationery..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-6 py-3 pl-12 bg-white border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 text-gray-800 placeholder-gray-500 shadow-sm transition-all duration-300"
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                className="w-full px-4 py-3 pl-12 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 text-gray-800 placeholder-gray-500 shadow-sm transition-all duration-200"
               />
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-amber-500" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4.5 h-4.5 text-amber-500" />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-colors duration-300 text-sm font-medium shadow-sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-colors duration-200 font-medium text-sm shadow-sm"
               >
                 Go
               </button>
             </form>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation Menu */}
           {isMobileMenuOpen && (
             <div 
-              className="lg:hidden bg-white rounded-2xl shadow-xl border border-gray-200 mb-4" 
+              className="absolute top-full left-0 right-0 bg-white shadow-xl border-t border-gray-100" 
               ref={mobileMenuRef}
             >
-              <div className="py-4">
+              <div className="py-5">
+                {/* User Info */}
+                {user ? (
+                  <div className="px-5 mb-5 pb-5 border-b border-gray-100">
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
+                          {user.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-bold text-gray-800 text-lg">{user.name}</div>
+                        <div className="text-sm text-gray-600 truncate">{user.email}</div>
+                        <div className="text-xs text-amber-600 font-semibold mt-2 bg-amber-50 px-3 py-1 rounded-full inline-block">
+                          Premium Member
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-5 mb-5 pb-5 border-b border-gray-100">
+                    <div className="text-center">
+                      <div className="text-gray-700 text-base mb-3 font-medium">Welcome to Art Plaza</div>
+                      <div className="flex space-x-3">
+                        <Link
+                          href="/login"
+                          className="flex-1 text-center bg-gray-800 text-white px-4 py-3.5 rounded-xl font-semibold hover:bg-gray-900 transition-colors duration-300 shadow-md"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Sign In
+                        </Link>
+                        <Link
+                          href="/register"
+                          className="flex-1 text-center bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3.5 rounded-xl font-semibold hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Register
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Mobile Navigation Links */}
                 <div className="space-y-1 px-4">
                   {navigation.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${
+                      className={`flex items-center space-x-4 px-4 py-4 rounded-xl transition-all duration-200 ${
                         pathname === item.href
-                          ? 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 shadow-sm'
+                          : 'text-gray-700 hover:bg-gray-50 hover:shadow-sm'
                       }`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <item.icon className={`w-5 h-5 ${pathname === item.href ? 'text-amber-600' : 'text-gray-500'}`} />
-                      <span className="font-medium text-lg">{item.name}</span>
+                      <div className={`p-2.5 rounded-lg ${
+                        pathname === item.href 
+                          ? 'bg-gradient-to-br from-amber-100 to-amber-200' 
+                          : 'bg-gray-100'
+                      }`}>
+                        <item.icon className={`w-5 h-5 ${pathname === item.href ? 'text-amber-600' : 'text-gray-600'}`} />
+                      </div>
+                      <span className="font-medium text-base">{item.name}</span>
                     </Link>
                   ))}
                 </div>
 
-                {/* Mobile Auth Buttons */}
-                {!user && (
-                  <div className="flex space-x-3 px-4 pt-6 mt-4 border-t border-gray-200">
-                    <Link
-                      href="/login"
-                      className="flex-1 text-center bg-gray-900 text-white px-4 py-3.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors duration-300"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="flex-1 text-center bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3.5 rounded-xl font-semibold hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-md"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Register
-                    </Link>
+                {/* Additional Mobile User Actions */}
+                {user && (
+                  <div className="mt-6 pt-5 border-t border-gray-100">
+                    <div className="grid grid-cols-2 gap-3 px-4 mb-6">
+                      <Link
+                        href="/profile"
+                        className="flex flex-col items-center p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl hover:shadow-md transition-all duration-300 group"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <div className="p-2.5 bg-white rounded-lg mb-2 group-hover:scale-110 transition-transform duration-300">
+                          <User className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <span className="font-semibold text-gray-900 text-sm">Profile</span>
+                      </Link>
+                      <Link
+                        href="/orders"
+                        className="flex flex-col items-center p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl hover:shadow-md transition-all duration-300 group"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <div className="p-2.5 bg-white rounded-lg mb-2 group-hover:scale-110 transition-transform duration-300">
+                          <Package className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <span className="font-semibold text-gray-900 text-sm">Orders</span>
+                      </Link>
+                    </div>
+                    
+                    <div className="px-4 space-y-2">
+                      {user.role === 'admin' && (
+                        <Link
+                          href="/admin"
+                          className="flex items-center space-x-3 px-4 py-3.5 text-amber-700 hover:bg-amber-50 rounded-xl transition-colors duration-200"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Settings className="w-5 h-5 text-amber-600" />
+                          <span className="font-medium">Admin Panel</span>
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center space-x-3 w-full px-4 py-3.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-200 mt-2"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Sign out</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -390,7 +609,7 @@ export default function Header() {
       </header>
       
       {/* Spacer for fixed header */}
-      <div className="h-20 lg:h-24" />
+      <div className="h-[136px] lg:h-[112px] 2xl:h-[120px]" />
     </>
-  );
+  ); 
 }

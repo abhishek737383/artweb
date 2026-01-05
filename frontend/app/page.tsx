@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  ArrowRight, 
+import {
+  ArrowRight,
   Crown,
   Sparkles,
   Trophy,
@@ -50,26 +50,30 @@ const ProductCardSkeleton = () => (
   </div>
 );
 
+// TopBar — centered, compact & attractive on mobile
 const TopBar = () => (
-  <div className="w-full bg-gradient-to-r from-gray-900 to-black text-white">
+  <div className="w-full bg-gradient-to-r from-gray-900 to-black text-white shadow-sm">
     <div className="max-w-7xl mx-auto px-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between py-3 gap-2">
-        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span className="font-medium">Free Shipping over ₹499</span>
+      <div className="flex items-center justify-center py-2">
+        <div className="flex items-center gap-3 sm:gap-6 text-center">
+          <div className="flex items-center gap-2 bg-white/6 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5">
+            <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400 flex-shrink-0" />
+            <span className="text-[11px] sm:text-sm md:text-base font-semibold tracking-tight">Free Shipping over ₹499</span>
           </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <Shield className="w-4 h-4 text-blue-400 flex-shrink-0" />
-            <span className="font-medium">100% Secure Checkout</span>
+
+          <div className="hidden sm:block h-4 w-px bg-white/20" aria-hidden />
+
+          <div className="flex items-center gap-2 bg-white/6 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5">
+            <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400 flex-shrink-0" />
+            <span className="text-[11px] sm:text-sm md:text-base font-semibold tracking-tight">100% Secure Checkout</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-yellow-400">24/7</span>
-            <span>Premium Support</span>
+
+          <div className="hidden sm:block h-4 w-px bg-white/20" aria-hidden />
+
+          <div className="flex items-center gap-2 bg-white/6 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5">
+            <span className="text-[11px] sm:text-sm md:text-base font-bold text-yellow-400">24/7</span>
+            <span className="text-[11px] sm:text-sm md:text-base font-semibold tracking-tight">Premium Support</span>
           </div>
-        </div>
-        <div className="text-sm font-medium">
-          Premium Art Supplies Since 2024
         </div>
       </div>
     </div>
@@ -77,14 +81,14 @@ const TopBar = () => (
 );
 
 // Premium Slider Component with Fade Animation
-const PremiumSlider = ({ 
-  images, 
-  current, 
-  onNext, 
-  onPrev, 
+const PremiumSlider = ({
+  images,
+  current,
+  onNext,
+  onPrev,
   onGoTo,
-  isLoading 
-}: { 
+  isLoading
+}: {
   images: SliderImage[];
   current: number;
   onNext: () => void;
@@ -109,7 +113,7 @@ const PremiumSlider = ({
               Discover our exclusive collection of premium art materials
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
+              <Link
                 href="/products"
                 className="inline-flex items-center justify-center bg-gray-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl group"
               >
@@ -131,9 +135,7 @@ const PremiumSlider = ({
           <div
             key={image._id}
             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === current 
-                ? 'opacity-100 z-10' 
-                : 'opacity-0 z-0'
+              index === current ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
             <div className="relative w-full h-full">
@@ -145,11 +147,11 @@ const PremiumSlider = ({
                 priority={index === 0}
                 sizes="100vw"
                 quality={75}
-                loading={index === 0 ? "eager" : "lazy"}
+                loading={index === 0 ? 'eager' : 'lazy'}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/20 to-transparent"></div>
             </div>
-            
+
             {/* Premium Content Overlay */}
             <div className="absolute inset-0 flex items-center">
               <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 w-full">
@@ -159,16 +161,16 @@ const PremiumSlider = ({
                       {image.title}
                     </h1>
                   )}
-                  
+
                   {image.subtitle && (
                     <p className="text-lg md:text-xl lg:text-2xl text-gray-100 mb-6 md:mb-8 max-w-lg leading-relaxed drop-shadow-lg animate-fadeIn delay-100">
                       {image.subtitle}
                     </p>
                   )}
-                  
+
                   {image.link && (
                     <div className="flex flex-col sm:flex-row gap-4 animate-fadeIn delay-200">
-                      <Link 
+                      <Link
                         href={image.link}
                         className="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 bg-white text-gray-900 rounded-xl hover:bg-gray-50 transition-all duration-300 font-bold text-base md:text-lg shadow-2xl hover:shadow-3xl group min-w-[180px] border border-gray-200"
                       >
@@ -176,7 +178,7 @@ const PremiumSlider = ({
                         Shop Now
                         <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2 md:ml-3 group-hover:translate-x-2 transition-transform" />
                       </Link>
-                      <Link 
+                      <Link
                         href="/categories"
                         className="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 bg-transparent border-2 border-white text-white rounded-xl hover:bg-white/10 transition-all duration-300 font-bold text-base md:text-lg min-w-[180px]"
                       >
@@ -219,9 +221,7 @@ const PremiumSlider = ({
                 key={index}
                 onClick={() => onGoTo(index)}
                 className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-500 ${
-                  index === current 
-                    ? 'bg-white scale-125 shadow-lg' 
-                    : 'bg-gray-400 hover:bg-gray-300'
+                  index === current ? 'bg-white scale-125 shadow-lg' : 'bg-gray-400 hover:bg-gray-300'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -239,7 +239,7 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [bestSellerProducts, setBestSellerProducts] = useState<Product[]>([]);
   const [newArrivalProducts, setNewArrivalProducts] = useState<Product[]>([]);
-  
+
   // Track loading states separately
   const [isSliderLoaded, setIsSliderLoaded] = useState(false);
   const [isCategoriesLoaded, setIsCategoriesLoaded] = useState(false);
@@ -275,7 +275,7 @@ export default function HomePage() {
           productApi.getProducts({ limit: 8, isBestSeller: true, isActive: true }),
           productApi.getProducts({ limit: 8, isActive: true, sortBy: 'createdAt', sortOrder: 'desc' })
         ]);
-        
+
         // Set products directly from the API response
         setFeaturedProducts(featured.products);
         setBestSellerProducts(bestSeller.products);
@@ -284,7 +284,6 @@ export default function HomePage() {
         console.error('Failed to load products:', error);
       }
       setIsProductsLoaded(true);
-
     } catch (error) {
       console.error('Unexpected error:', error);
       // Still mark as loaded to show content
@@ -302,11 +301,11 @@ export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   useEffect(() => {
     if (sliderImages.length <= 1 || !isSliderLoaded) return;
-    
+
     const interval = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % sliderImages.length);
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, [sliderImages.length, isSliderLoaded]);
 
@@ -322,16 +321,15 @@ export default function HomePage() {
     setCurrentSlide(index);
   }, []);
 
-  const featuredCategories = categories
-    .filter(cat => !cat.parentId)
-    .slice(0, 6);
+  const featuredCategories = categories.filter(cat => !cat.parentId).slice(0, 6);
 
   return (
     <main className="min-h-screen bg-white">
       {/* IMPORTANT: Add margin-top equal to your header height */}
-      <div className="mt-16 lg:mt-24">
+      {/* Reduced mobile margin to avoid excess spacing on small screens */}
+      <div className="mt-3 md:mt-9 lg:mt-10">
         <TopBar />
-        
+
         {/* Premium Slider Section with Fade Animation */}
         <PremiumSlider
           images={sliderImages}
@@ -343,9 +341,9 @@ export default function HomePage() {
         />
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 lg:py-15">
           {/* Premium Categories Section */}
-          <section className="mb-12 md:mb-16 lg:mb-20">
+          <section className="mb-12 md:mb-16 lg:mb-16">
             <div className="text-center mb-8 md:mb-12">
               <div className="inline-flex items-center justify-center mb-4 md:mb-6">
                 <div className="relative">
@@ -379,7 +377,7 @@ export default function HomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 {featuredCategories.map((category, index) => (
                   <div key={category._id} className="group relative">
-                    <Link 
+                    <Link
                       href={`/categories/${category.slug}`}
                       className="block relative overflow-hidden rounded-2xl md:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 border border-gray-200"
                     >
@@ -393,7 +391,7 @@ export default function HomePage() {
                             sizes="(max-width: 1024px) 100vw, 50vw"
                             priority={index < 2}
                             quality={75}
-                            loading={index < 2 ? "eager" : "lazy"}
+                            loading={index < 2 ? 'eager' : 'lazy'}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -415,7 +413,7 @@ export default function HomePage() {
                             <h3 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 text-white drop-shadow-lg">
                               {category.name}
                             </h3>
-                            
+
                             {category.description && (
                               <p className="text-gray-100 text-sm md:text-base mb-4 max-w-2xl drop-shadow-lg line-clamp-2">
                                 {category.description}
@@ -424,7 +422,7 @@ export default function HomePage() {
                           </div>
                           <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex-shrink-0" />
                         </div>
-                        
+
                         <div className="flex items-center">
                           <span className="text-sm md:text-base font-semibold mr-3 text-white drop-shadow-lg">Explore Collection</span>
                           <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center group-hover:from-purple-700 group-hover:to-pink-700 transition-all duration-300 shadow-lg">
@@ -476,8 +474,8 @@ export default function HomePage() {
                 <p className="text-gray-600 mt-1">Handpicked premium selections</p>
               </div>
               {isProductsLoaded && featuredProducts.length > 0 && (
-                <Link 
-                  href="/products?isFeatured=true" 
+                <Link
+                  href="/products?isFeatured=true"
                   className="inline-flex items-center bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100 px-5 md:px-6 py-3 rounded-xl font-semibold text-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl group border border-gray-200"
                 >
                   View All
@@ -494,7 +492,7 @@ export default function HomePage() {
               </div>
             ) : featuredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {featuredProducts.slice(0, 4).map((product) => (
+                {featuredProducts.slice(0, 4).map(product => (
                   <div key={product._id} className="transform hover:-translate-y-1 transition-transform duration-300">
                     <ProductCard product={product} />
                   </div>
@@ -523,8 +521,8 @@ export default function HomePage() {
                 <p className="text-gray-600 mt-1">Most loved by our customers</p>
               </div>
               {isProductsLoaded && bestSellerProducts.length > 0 && (
-                <Link 
-                  href="/products?isBestSeller=true" 
+                <Link
+                  href="/products?isBestSeller=true"
                   className="inline-flex items-center bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100 px-5 md:px-6 py-3 rounded-xl font-semibold text-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl group border border-gray-200"
                 >
                   View All
@@ -541,7 +539,7 @@ export default function HomePage() {
               </div>
             ) : bestSellerProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {bestSellerProducts.slice(0, 4).map((product) => (
+                {bestSellerProducts.slice(0, 4).map(product => (
                   <div key={product._id} className="transform hover:-translate-y-1 transition-transform duration-300">
                     <ProductCard product={product} />
                   </div>
@@ -570,8 +568,8 @@ export default function HomePage() {
                 <p className="text-gray-600 mt-1">Fresh additions to our collection</p>
               </div>
               {isProductsLoaded && newArrivalProducts.length > 0 && (
-                <Link 
-                  href="/products?sort=newest" 
+                <Link
+                  href="/products?sort=newest"
                   className="inline-flex items-center bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100 px-5 md:px-6 py-3 rounded-xl font-semibold text-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl group border border-gray-200"
                 >
                   View All
@@ -588,7 +586,7 @@ export default function HomePage() {
               </div>
             ) : newArrivalProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {newArrivalProducts.slice(0, 4).map((product) => (
+                {newArrivalProducts.slice(0, 4).map(product => (
                   <div key={product._id} className="transform hover:-translate-y-1 transition-transform duration-300">
                     <ProductCard product={product} />
                   </div>
@@ -614,7 +612,7 @@ export default function HomePage() {
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Free Shipping</h3>
                   <p className="text-gray-600 text-sm">Free delivery on orders above ₹499</p>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200 hover:border-blue-300 transition-all duration-300 hover:shadow-xl">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mb-4">
                     <Shield className="w-6 h-6 text-white" />
@@ -622,7 +620,7 @@ export default function HomePage() {
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Secure Checkout</h3>
                   <p className="text-gray-600 text-sm">100% secure payment processing</p>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200 hover:border-green-300 transition-all duration-300 hover:shadow-xl">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center mb-4">
                     <span className="text-white text-lg font-bold">24/7</span>
@@ -630,7 +628,7 @@ export default function HomePage() {
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Premium Support</h3>
                   <p className="text-gray-600 text-sm">Always here to help you</p>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200 hover:border-yellow-300 transition-all duration-300 hover:shadow-xl">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center mb-4">
                     <Crown className="w-6 h-6 text-white" />
@@ -656,7 +654,7 @@ export default function HomePage() {
                     Elevate your creativity with our curated collections.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link 
+                    <Link
                       href="/products"
                       className="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-xl hover:shadow-2xl text-base md:text-lg group"
                     >
@@ -664,7 +662,7 @@ export default function HomePage() {
                       Shop All Products
                       <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2 md:ml-3 group-hover:translate-x-2 transition-transform" />
                     </Link>
-                    <Link 
+                    <Link
                       href="/categories"
                       className="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-white/10 transition-all duration-300 text-base md:text-lg"
                     >
@@ -685,36 +683,41 @@ export default function HomePage() {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
         }
-        
+
         @keyframes fadeIn {
-          from { 
+          from {
             opacity: 0;
             transform: translateY(20px);
           }
-          to { 
+          to {
             opacity: 1;
             transform: translateY(0);
           }
         }
-        
+
         .animate-shimmer {
           animation: shimmer 2s infinite;
         }
-        
+
         .animate-fadeIn {
           animation: fadeIn 0.8s ease-out forwards;
         }
-        
+
         .delay-100 {
           animation-delay: 0.1s;
         }
-        
+
         .delay-200 {
           animation-delay: 0.2s;
         }
-        
+
         .delay-300 {
           animation-delay: 0.3s;
+        }
+
+        /* Small utility for tighter topbar pills on very small screens */
+        @media (max-width: 380px) {
+          .topbar-pill-small { padding-left: 8px; padding-right: 8px; }
         }
       `}</style>
     </main>
