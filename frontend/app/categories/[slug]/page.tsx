@@ -1,4 +1,3 @@
-// app/categories/[slug]/page.tsx  (or wherever your route file lives)
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -42,24 +41,19 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   };
 }
 
+// Safe image helpers (always return strings)
 function getImageUrl(image: any): string {
   if (!image) return '';
-  
-  if (typeof image === 'string') {
-    return image;
-  }
-  
-  if (typeof image === 'object') {
-    return image.url || image.src || '';
-  }
-  
+  if (typeof image === 'string') return image;
+  if (typeof image === 'object') return image.url ?? image.src ?? '';
   return '';
 }
 
 function getImageAlt(image: any, defaultAlt: string): string {
-  if (!image || typeof image !== 'object') return defaultAlt;
-  
-  return image.altText || image.alt || defaultAlt;
+  if (!image) return defaultAlt;
+  if (typeof image === 'object') return image.altText ?? image.alt ?? defaultAlt;
+  if (typeof image === 'string') return defaultAlt;
+  return defaultAlt;
 }
 
 function MobileFilterButton() {
@@ -96,7 +90,7 @@ async function ProductsContent({
     search: searchQuery,
   }).catch(() => ({ products: [], total: 0, totalPages: 0 }));
 
-  if (productsData.products.length === 0) {
+  if (!productsData || (productsData.products || []).length === 0) {
     return (
       <div className="text-center py-12 md:py-16">
         <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-6">
@@ -133,42 +127,55 @@ async function ProductsContent({
     );
   }
 
+  // ensure array existence
+  const products = productsData.products ?? [];
+
   return (
     <>
-      {/* Mobile: Grid with 2 columns */}
+      {/* Mobile grid: each tile wraps clickable parts in Link so mobile taps navigate */}
       <div className="md:hidden">
         <div className="grid grid-cols-2 gap-3">
-          {productsData.products.map((product) => {
+          {products.map((product) => {
             const firstImage = product.images?.[0];
             const imageUrl = getImageUrl(firstImage);
-            const imageAlt = getImageAlt(firstImage, product.name);
-            
+            const imageAlt = getImageAlt(firstImage, product.name || 'Product');
+            const productSlugOrId = String(product.slug ?? product._id ?? '');
+
             return (
-              <div key={product._id} className="w-full">
-                <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm h-full">
-                  <div className="relative aspect-square w-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-md mb-2 overflow-hidden">
-                    {imageUrl ? (
-                      <img 
-                        src={imageUrl} 
-                        alt={imageAlt}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-100"></div>
-                    )}
+              <div key={product._id ?? productSlugOrId} className="w-full">
+                <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm h-full flex flex-col">
+                  {/* Link wraps the image + meta (so tapping goes to details) */}
+                  <Link href={`/products/${encodeURIComponent(productSlugOrId)}`} className="block">
+                    <div className="relative aspect-square w-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-md mb-2 overflow-hidden">
+                      {imageUrl ? (
+                        // use native img tag for simple server-rendered mobile tile
+                        <img 
+                          src={imageUrl} 
+                          alt={imageAlt}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
+                          <Package className="w-6 h-6 text-white/60" />
+                        </div>
+                      )}
+                    </div>
+
+                    <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 text-xs leading-tight min-h-[32px]">
+                      {product.name}
+                    </h3>
+                    <p className="text-xs font-bold text-gray-900 mb-2">
+                      ₹{(product.price ?? 0).toLocaleString()}
+                    </p>
+                  </Link>
+
+                  {/* Add to Cart - kept outside Link so it doesn't navigate */}
+                  <div className="mt-auto">
+                    <button className="w-full py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium rounded-md hover:from-purple-700 hover:to-pink-700 transition-all">
+                      Add to Cart
+                    </button>
                   </div>
-                  
-                  <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 text-xs leading-tight min-h-[32px]">
-                    {product.name}
-                  </h3>
-                  <p className="text-xs font-bold text-gray-900 mb-2">
-                    ₹{product.price.toLocaleString()}
-                  </p>
-                  
-                  <button className="w-full py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-medium rounded-md hover:from-purple-700 hover:to-pink-700 transition-all">
-                    Add to Cart
-                  </button>
                 </div>
               </div>
             );
@@ -176,10 +183,10 @@ async function ProductsContent({
         </div>
       </div>
       
-      {/* Desktop: Grid */}
+      {/* Desktop: existing ProductGrid stays (assumed client rendering / clickable) */}
       <div className="hidden md:block">
         <ProductGrid 
-          products={productsData.products} 
+          products={products} 
           loading={false}
         />
       </div>
@@ -273,6 +280,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
       )
     : [];
 
+  // Get at least one product to show product count / heading
   const productsData = await productApi.getProducts({
     page: 1,
     limit: 1,
@@ -359,7 +367,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {subcategories.map((subcategory, index) => (
                 <CategoryCard 
-                  key={subcategory._id} 
+                  key={subcategory._id ?? subcategory.slug} 
                   category={subcategory} 
                   index={index}
                 />
@@ -376,7 +384,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                 Products in {category.name}
               </h2>
               <p className="text-gray-600 text-sm">
-                Showing {productsData.total} premium products
+                Showing {productsData.total ?? 0} premium products
               </p>
             </div>
 
@@ -477,7 +485,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {relatedCategories.map((sibling, index) => (
                 <CategoryCard 
-                  key={sibling._id} 
+                  key={sibling._id ?? sibling.slug} 
                   category={sibling} 
                   index={index}
                 />
