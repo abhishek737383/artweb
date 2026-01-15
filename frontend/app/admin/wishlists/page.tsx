@@ -239,23 +239,6 @@ export default function AdminWishlistsPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleExportData('csv')}
-              disabled={exportLoading || !wishlists.length}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {exportLoading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Export CSV
-                </>
-              )}
-            </button>
             
             <button
               onClick={() => {
