@@ -12,8 +12,8 @@ import CategoryCard from '../components/shared/CategoryCard';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Premium Collections | Art plazaa ',
-  description: 'Browse our premium collections of art supplies, stationery, and creative materials',
+  title: 'Our  Collections |Art Plazaaa a a ',
+  description: 'Browse our Our  Collections of art supplies, stationery, and creative materials',
 };
 
 export const revalidate = 3600; // Revalidate every hour
@@ -148,7 +148,7 @@ export default async function CategoriesPage() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
-                Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collections</span>
+                Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collections</span>
               </h1>
               <p className="text-gray-600 text-sm md:text-base mt-1">
                 Discover our complete collection of premium art supplies and stationery
@@ -254,5 +254,5 @@ async function CategoryCount({ categoriesPromise }: { categoriesPromise: Promise
   const activeCategories = categories.filter(cat => cat.isActive);
   const parentCategories = activeCategories.filter(cat => !cat.parentId);
   
-  return <>{parentCategories.length} premium collections</>;
+  return <>{parentCategories.length} Our  Collections</>;
 }

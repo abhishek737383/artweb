@@ -330,7 +330,7 @@ export default function NewProductPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Short Description
+                  Key Features
                 </label>
                 <textarea
                   value={formData.shortDescription}

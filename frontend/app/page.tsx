@@ -358,7 +358,7 @@ export default function HomePage() {
                     <span className="text-purple-600 font-bold text-xs md:text-sm uppercase tracking-wider">Collections</span>
                   </div>
                   <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
-                    Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collections</span>
+                  Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Collections</span>
                   </h2>
                 </div>
               </div>
@@ -399,7 +399,7 @@ export default function HomePage() {
                               <div className="text-6xl md:text-8xl font-bold text-gray-300 mb-4">
                                 {category.name.charAt(0)}
                               </div>
-                              <span className="text-gray-400">Premium Collection</span>
+                              <span className="text-gray-400">Our Collections</span>
                             </div>
                           </div>
                         )}
@@ -436,7 +436,7 @@ export default function HomePage() {
                         <div className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-lg shadow-xl">
                           <div className="flex items-center">
                             <Crown className="w-3 h-3 mr-1.5" />
-                            Premium
+                           
                           </div>
                         </div>
                       </div>
@@ -452,7 +452,7 @@ export default function HomePage() {
                     <Package className="w-8 h-8 md:w-10 md:h-10 text-gray-300" />
                   </div>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">Premium Collections Coming Soon</h3>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">Our  Collections Coming Soon</h3>
                 <p className="text-gray-600 max-w-md mx-auto">
                   We're curating amazing art supplies collections for you
                 </p>
@@ -635,41 +635,6 @@ export default function HomePage() {
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Premium Quality</h3>
                   <p className="text-gray-600 text-sm">Curated from top brands worldwide</p>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Premium CTA */}
-          {(isCategoriesLoaded || isProductsLoaded) && (
-            <section>
-              <div className="relative rounded-2xl md:rounded-3xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
-                <div className="relative z-10 p-8 md:p-12 text-center">
-                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 md:mb-6">
-                    Ready to Create Your Masterpiece?
-                  </h2>
-                  <p className="text-gray-300 text-base md:text-lg mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed">
-                    Join thousands of artists who trust Art plazaa  for their premium art supplies.
-                    Elevate your creativity with our curated collections.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link
-                      href="/products"
-                      className="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-xl hover:shadow-2xl text-base md:text-lg group"
-                    >
-                      <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3" />
-                      Shop All Products
-                      <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-2 md:ml-3 group-hover:translate-x-2 transition-transform" />
-                    </Link>
-                    <Link
-                      href="/categories"
-                      className="inline-flex items-center justify-center px-6 md:px-8 py-3 md:py-4 bg-transparent border-2 border-white text-white font-bold rounded-xl hover:bg-white/10 transition-all duration-300 text-base md:text-lg"
-                    >
-                      <Crown className="w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3" />
-                      Premium Collections
-                    </Link>
-                  </div>
                 </div>
               </div>
             </section>

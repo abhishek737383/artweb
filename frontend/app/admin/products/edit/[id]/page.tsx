@@ -553,7 +553,7 @@ export default function EditProductPage() {
           
           <div className="mt-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Short Description
+              Key Features
             </label>
             <textarea
               value={product.shortDescription || ''}

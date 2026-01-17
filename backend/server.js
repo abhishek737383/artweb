@@ -12,6 +12,10 @@ const categoryRoutes = require('./routes/categories');
 const sliderRoutes = require('./routes/sliderRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const adminWishlistRoutes = require('./routes/admin/wishlistRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const adminOrderRoutes = require('./routes/adminOrderRoutes');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -69,7 +73,7 @@ app.use((req, res, next) => {
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
-    message: '🚀 Art plazaa a  Backend is running!',
+    message: '🚀Art Plazaa Backend is running!',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
@@ -96,6 +100,10 @@ app.use('/api/auth', authRoutes);
 // Add to your existing routes section:
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/admin/wishlists', adminWishlistRoutes);
+// Cart & Order Routes
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes); // User orders
+app.use('/api/admin/orders', adminOrderRoutes);
 
 // 404 handler for API routes
 app.use('/api/*', (req, res) => {

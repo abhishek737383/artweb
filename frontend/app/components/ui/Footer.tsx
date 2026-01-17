@@ -31,7 +31,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="lg:col-span-1">
             <Link href="/" className="text-2xl font-bold text-white">
-              Art plazaa a 
+             Art Plazaa
             </Link>
             <p className="mt-4 text-gray-300 text-sm">
               Your premier destination for premium stationery and art supplies. 
@@ -106,7 +106,7 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className="mt-12 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-300 text-sm">
-            © {currentYear} Art plazaa a . All rights reserved.
+            © {currentYear}Art Plazaa. All rights reserved.
           </p>
           <div className="mt-4 md:mt-0 flex space-x-6">
             <span className="text-gray-300 text-sm">Secure payments</span>

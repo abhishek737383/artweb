@@ -101,8 +101,8 @@ export default function Header() {
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Products', href: '/products', icon: Package },
-    { name: 'Categories', href: '/categories', icon: Tag },
+    { name: 'Categories', href: '/categories', icon: Tag },  // Moved before Products
+    { name: 'Products', href: '/products', icon: Package },  // Moved after Categories
     { name: 'About', href: '/about', icon: Info },
     { name: 'Contact', href: '/contact', icon: Mail },
   ];
@@ -126,10 +126,10 @@ export default function Header() {
                   className="flex items-center space-x-5 group transition-all duration-300 hover:scale-[1.02]"
                 >
                   <div className="relative">
-                    <div className="w-18 h-18 2xl:w-24 2xl:h-19 rounded-2xl overflow-hidden bg-white shadow-xl border-2 border-amber-100 group-hover:border-amber-200 transition-all duration-300">
+                    <div className="w-18 h-18 2xl:w-23 2xl:h-19 rounded-2xl overflow-hidden bg-white shadow-xl border-2 border-amber-100 group-hover:border-amber-200 transition-all duration-300">
                       <img 
-                        src="/logo.jpg" 
-                        alt="Art plazaa  - Premium Stationery"
+                        src="/logo1.jpg" 
+                        alt="Art Plazaa  - Premium Stationery"
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -153,7 +153,7 @@ export default function Header() {
                   
                   <div className="flex flex-col space-y-1">
                     <span className="text-3xl 2xl:text-4xl font-bold text-gray-900 tracking-tight font-playfair">
-                      Art Plazza
+                     Art Plazaa
                     </span>
                     <span className="text-xs text-amber-600 font-medium tracking-[0.3em] uppercase">
                       Premium Stationery
@@ -255,7 +255,7 @@ export default function Header() {
                         
                         <div className="py-3 space-y-1">
                           <Link
-                            href="/profile"
+                            href="/user/profile"
                             className="flex items-center px-5 py-3.5 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl mx-2 transition-all duration-300 group"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
@@ -268,7 +268,7 @@ export default function Header() {
                             </div>
                           </Link>
                           <Link
-                            href="/orders"
+                            href="/user/orders"
                             className="flex items-center px-5 py-3.5 text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 rounded-xl mx-2 transition-all duration-300 group"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
@@ -344,7 +344,7 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Bottom Row: Professional Navigation Tabs */}
+          {/* Bottom Row: Professional Navigation Tabs - Categories before Products */}
           <div className="border-t border-gray-100 bg-gradient-to-r from-amber-50/30 via-white to-amber-50/30">
             <div className="w-full px-10 xl:px-16 2xl:px-20">
               <nav className="flex items-center justify-center space-x-12 xl:space-x-16 py-3">
@@ -395,7 +395,7 @@ export default function Header() {
                   <div className="w-19 h-15 rounded-xl overflow-hidden bg-white shadow-lg border border-amber-100">
                     <img 
                       src="/logo.jpg" 
-                      alt="Art plazaa "
+                      alt="Art Plazaa "
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -416,7 +416,7 @@ export default function Header() {
                   
                   {/* Mobile Brand Name */}
                   <div className="flex flex-col">
-                    <span className="text-xl font-bold text-gray-900 font-playfair">Art plazaa </span>
+                    <span className="text-xl font-bold text-gray-900 font-playfair">Art Plazaa  </span>
                     <span className="text-xs text-amber-600 font-medium tracking-wider">Premium</span>
                   </div>
                 </Link>
@@ -488,7 +488,7 @@ export default function Header() {
             </form>
           </div>
 
-          {/* Mobile Navigation Menu */}
+          {/* Mobile Navigation Menu - Categories before Products */}
           {isMobileMenuOpen && (
             <div 
               className="fixed inset-0 bg-black bg-opacity-50 z-40 top-[136px]"
@@ -522,7 +522,7 @@ export default function Header() {
                   ) : (
                     <div className="px-4 mb-4 pb-4 border-b border-gray-100">
                       <div>
-                        <div className="text-gray-700 text-sm mb-3 font-medium">Welcome to Art plazaa </div>
+                        <div className="text-gray-700 text-sm mb-3 font-medium">Welcome to Art Plazaa </div>
                         <div className="flex space-x-2">
                           <Link
                             href="/login"
@@ -543,7 +543,7 @@ export default function Header() {
                     </div>
                   )}
 
-                  {/* Mobile Navigation Links - Compact */}
+                  {/* Mobile Navigation Links - Compact with Categories before Products */}
                   <div className="space-y-0.5 px-3 mb-4">
                     {navigation.map((item) => (
                       <Link
@@ -577,7 +577,7 @@ export default function Header() {
                       
                       <div className="space-y-0.5 px-3 mb-3">
                         <Link
-                          href="/profile"
+                          href="/user/profile"
                           className="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -586,7 +586,7 @@ export default function Header() {
                         </Link>
                         
                         <Link
-                          href="/orders"
+                          href="/user/orders"
                           className="flex items-center space-x-3 px-3 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -632,7 +632,7 @@ export default function Header() {
                   {/* Contact Info */}
                   <div className="px-4 mt-6 pt-4 border-t border-gray-100">
                     <div className="text-xs text-gray-500 text-center">
-                      <p className="mb-1">Art Plazza Premium Stationery</p>
+                      <p className="mb-1">Art Plazaa  Premium Stationery</p>
                       <p>© {new Date().getFullYear()} All rights reserved</p>
                     </div>
                   </div>

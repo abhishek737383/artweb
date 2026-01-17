@@ -53,7 +53,13 @@ const adminAuth = async (req, res, next) => {
   }
 };
 
+// Alias for compatibility with existing code
+const protect = auth;
+const admin = adminAuth;
+
 module.exports = {
   auth,
-  adminAuth
+  adminAuth,
+  protect, // Alias for auth
+  admin    // Alias for adminAuth
 };

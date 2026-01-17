@@ -1,4 +1,3 @@
-// app/components/shared/ProductCard.tsx
 'use client';
 
 import Image from 'next/image';
@@ -8,6 +7,7 @@ import { Star, Heart, ShoppingBag, Sparkles, Award, Check } from 'lucide-react';
 import { Product } from '../../../types/product';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
+import { useAuth } from '../../components/contexts/AuthContext';
 
 interface ProductCardProps {
   product: Product;
@@ -19,35 +19,58 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
-  const [showWishlist, setShowWishlist] = useState(true);
   const cardRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { user, loginRequired } = useAuth();
   
   const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
-  const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-  const discountPercent = hasDiscount 
+  
+  // Only show discount if compareAtPrice exists and is greater than price
+  const hasValidDiscount = product.compareAtPrice && 
+                          product.compareAtPrice > 0 && 
+                          product.compareAtPrice > product.price;
+  
+  // Calculate discount percentage only if valid discount exists
+  const discountPercent = hasValidDiscount 
     ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
-    : 33;
+    : 0;
 
   // Sync wishlist state
   useEffect(() => {
-    if (product._id) {
+    if (product._id && user) {
       setIsWishlisted(isInWishlist(product._id));
+    } else {
+      setIsWishlisted(false);
     }
-  }, [product._id, isInWishlist]);
+  }, [product._id, isInWishlist, user]);
+
+  // Safe function to get product slug
+  const getProductSlug = (): string => {
+    if (!product) return '#';
+    
+    const slug = product.slug;
+    if (typeof slug === 'string' && slug.trim() !== '') {
+      return slug;
+    }
+    
+    const productId = product._id || product.id;
+    if (typeof productId === 'string' && productId.trim() !== '') {
+      return productId;
+    }
+    
+    return '#';
+  };
 
   const handleCardClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     
-    // Don't trigger if clicking on buttons
     if (target.closest('button') || target.closest('a[href]')) {
       return;
     }
     
     setIsClicked(true);
     
-    // Add ripple effect
     const card = cardRef.current;
     if (card) {
       const ripple = document.createElement('span');
@@ -74,20 +97,24 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       setTimeout(() => ripple.remove(), 600);
     }
     
-    // Navigate after animation
-    setTimeout(() => {
-      window.location.href = `/products/${product.slug}`;
-    }, 300);
+    const productSlug = getProductSlug();
+    if (productSlug !== '#') {
+      window.location.href = `/products/${productSlug}`;
+    }
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
+    if (!user) {
+      loginRequired();
+      return;
+    }
+    
     addToCart(product, 1);
     setIsAdded(true);
     
-    // Reset animation after 2 seconds
     setTimeout(() => {
       setIsAdded(false);
     }, 2000);
@@ -96,6 +123,11 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!user) {
+      loginRequired();
+      return;
+    }
     
     if (!product._id) return;
     
@@ -107,6 +139,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       setIsWishlisted(true);
     }
   };
+
+  const productSlug = getProductSlug();
 
   return (
     <div 
@@ -146,11 +180,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           </div>
         )}
 
-        {/* Badges - Better mobile sizing */}
+        {/* Badges - Conditionally show discount badge */}
         <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-          <span className="px-2 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] md:text-xs font-bold rounded-lg shadow-lg">
-            {discountPercent}% OFF
-          </span>
+          {/* Only show discount badge if there's a valid discount */}
+          {hasValidDiscount && discountPercent > 0 && (
+            <span className="px-2 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] md:text-xs font-bold rounded-lg shadow-lg">
+              {discountPercent}% OFF
+            </span>
+          )}
           {product.isBestSeller && (
             <span className="px-2 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-[10px] md:text-xs font-bold rounded-lg shadow-lg flex items-center">
               <Award className="w-2 h-2 md:w-3 md:h-3 mr-1" />
@@ -167,11 +204,9 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           )}
         </div>
 
-        {/* Wishlist Button - ALWAYS VISIBLE */}
+        {/* Wishlist Button */}
         <button 
           onClick={handleWishlistToggle}
-          onMouseEnter={() => setShowWishlist(true)}
-          onMouseLeave={() => setShowWishlist(true)}
           className="absolute top-2 right-2 p-1.5 md:p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-300 z-10 hover:scale-110 active:scale-95"
         >
           <Heart className={`w-3 h-3 md:w-4 md:h-4 transition-all duration-300 ${
@@ -196,9 +231,17 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         )}
 
         {/* Title */}
-        <h3 className="font-semibold text-gray-900 mt-1 hover:text-purple-600 transition-colors line-clamp-2 text-sm md:text-base min-h-[40px] cursor-pointer">
-          {product.name}
-        </h3>
+        {productSlug !== '#' ? (
+          <Link href={`/products/${productSlug}`}>
+            <h3 className="font-semibold text-gray-900 mt-1 hover:text-purple-600 transition-colors line-clamp-2 text-sm md:text-base min-h-[40px] cursor-pointer">
+              {product.name}
+            </h3>
+          </Link>
+        ) : (
+          <h3 className="font-semibold text-gray-900 mt-1 line-clamp-2 text-sm md:text-base min-h-[40px]">
+            {product.name}
+          </h3>
+        )}
 
         {/* Rating - Hidden on mobile to save space */}
         <div className="hidden md:flex items-center mt-2">
@@ -219,7 +262,8 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
             <span className="text-sm md:text-lg font-bold text-gray-900">
               ₹{product.price.toLocaleString()}
             </span>
-            {hasDiscount && (
+            {/* Only show compare price if there's a valid discount */}
+            {hasValidDiscount && (
               <span className="text-xs md:text-sm text-gray-500 line-through hidden sm:block">
                 ₹{product.compareAtPrice?.toLocaleString()}
               </span>

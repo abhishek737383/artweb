@@ -8,7 +8,7 @@ import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext'; // Add this import
 
 export const metadata: Metadata = {
-  title: 'Art plazaa a - Premium Stationery',
+  title: 'Art plazaa ',
   description: 'Your one-stop shop for premium art supplies and stationery',
 };
 

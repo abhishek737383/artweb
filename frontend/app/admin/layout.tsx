@@ -64,7 +64,7 @@ export default function AdminLayout({
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-center items-center">
-            <h1 className="text-xl font-bold text-gray-900">Art plazaa a  Admin</h1>
+            <h1 className="text-xl font-bold text-gray-900">Art Plazaa  Admin</h1>
           </div>
         </div>
       </div>

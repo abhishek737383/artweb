@@ -24,6 +24,7 @@ import ProductCard from '../../components/shared/ProductCard';
 import ProductImageGallery from '../../components/shared/ProductImageGallery';
 import ProductActions from '../../components/shared/ProductActions';
 
+
 interface ProductPageProps {
   params: Promise<{
     slug: string;
@@ -36,13 +37,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   
   if (!product) {
     return {
-      title: 'Product Not Found | Art plazaa ',
+      title: 'Product Not Found |Art Plazaa',
       description: 'Premium art supplies and stationery',
     };
   }
   
   return {
-    title: `${product.name} | Premium Art Supplies | Art plazaa `,
+    title: `${product.name} | Premium Art Supplies |Art Plazaaa a a `,
     description: product.shortDescription || product.description?.substring(0, 160) || '',
     openGraph: {
       title: product.name,
@@ -300,7 +301,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
 
-        {/* Specifications */}
+        {/* Specifications
         <div className="mt-8 md:mt-12 bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 md:p-8 shadow-sm shine-effect">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Specifications</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -338,7 +339,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
