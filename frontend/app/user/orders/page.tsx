@@ -1,3 +1,4 @@
+// app/user/orders/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,12 +14,10 @@ import {
   ChevronRight,
   ArrowLeft,
   Search,
-  Filter,
-  Calendar,
-  Download,
-  Eye,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Calendar,
+  Eye
 } from 'lucide-react';
 import { ordersApi } from '../../lib/api/orders';
 
@@ -69,8 +68,12 @@ export default function UserOrdersPage() {
       
       const result = await ordersApi.getUserOrders(params);
       
-      setOrders(result.orders);
-      setTotalPages(result.totalPages);
+      if (result.success && result.data) {
+        setOrders(result.data.orders);
+        setTotalPages(result.data.totalPages);
+      } else {
+        setError(result.error || 'Failed to load orders');
+      }
       setLoading(false);
     } catch (error: any) {
       console.error('Error loading orders:', error);

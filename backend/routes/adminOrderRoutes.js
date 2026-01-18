@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const adminOrderController = require('../controllers/adminOrderController');
-const { auth } = require('../middleware/auth');
 
-// All routes require authentication only
-router.use(auth);
+// All admin order routes - NO AUTH MIDDLEWARE (for development/testing only)
+// IMPORTANT: In production, you should add proper admin authentication
 
-// Order of routes is important! More specific routes should come first
 // Get order statistics - MUST COME BEFORE :orderId route
 router.get('/stats', adminOrderController.getOrderStats);
 

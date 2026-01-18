@@ -1,3 +1,4 @@
+// app/user/orders/[id]/page.tsx
 'use client';
 
 import { useState, useEffect, ReactNode } from 'react';
@@ -16,7 +17,6 @@ import {
   CreditCard,
   TruckIcon,
   Calendar,
-  Download,
   Printer,
   MessageSquare,
   AlertCircle,
@@ -98,7 +98,7 @@ export default function OrderDetailsPage() {
       setLoading(true);
       setError(null);
       
-      const response = await ordersApi.getOrder(orderId);
+      const response = await ordersApi.getUserOrder(orderId);
       
       if (response.success && response.data?.order) {
         setOrder(response.data.order);
@@ -464,15 +464,6 @@ export default function OrderDetailsPage() {
                         <span>Quantity: {item.quantity}</span>
                         <span>Price: ₹{item.price.toLocaleString()}</span>
                       </div>
-                      {/* {item.productId && (
-                        <Link
-                          href={`/products/${item.productId}`}
-                          className="text-sm text-purple-600 hover:text-purple-800 font-medium inline-flex items-center gap-1 mt-2"
-                        >
-                          View Product Details
-                          <ChevronRight className="w-3 h-3" />
-                        </Link>
-                      )} */}
                     </div>
                     
                     <div className="text-right">
