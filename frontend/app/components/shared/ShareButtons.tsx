@@ -24,43 +24,42 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
   const [hasNativeShare, setHasNativeShare] = useState(false);
   const [productUrl, setProductUrl] = useState('');
 
-  // Initialize on client only - SAFE from hydration
+  // Build URL and detect native share API on client
   useEffect(() => {
-    // Build the URL
+    if (typeof window === 'undefined') return;
+
     const url = `${window.location.origin}/products/${product.slug}`;
     setProductUrl(url);
-    
-    // Check for native share API
-    if (typeof navigator !== 'undefined' && navigator.share) {
+
+    // runtime check: ensure share exists and is a function
+    if (typeof navigator !== 'undefined' && typeof (navigator as any).share === 'function') {
       setHasNativeShare(true);
     }
   }, [product.slug]);
 
-  // Show loading state during SSR and initial client render
+  // Hydration guard
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Simple, reliable copy function
+  // Copy utilities
   const copyToClipboard = (text: string) => {
-    // Method 1: Modern API
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text)
+    if (typeof navigator !== 'undefined' && (navigator as any).clipboard && window.isSecureContext) {
+      (navigator as any).clipboard.writeText(text)
         .then(() => {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
         })
-        .catch(() => {
-          fallbackCopy(text);
-        });
+        .catch(() => fallbackCopy(text));
     } else {
-      // Method 2: Fallback
       fallbackCopy(text);
     }
   };
 
   const fallbackCopy = (text: string) => {
+    if (typeof document === 'undefined') return;
+
     const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.style.position = 'fixed';
@@ -69,14 +68,15 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
+
     try {
       document.execCommand('copy');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Fallback copy failed:', err);
-      // Show text in alert for manual copy
+      // prompt as last resort
+      // eslint-disable-next-line no-alert
       window.prompt('Copy to clipboard: Ctrl+C, Enter', text);
     } finally {
       document.body.removeChild(textArea);
@@ -88,12 +88,13 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
     copyToClipboard(productUrl);
   };
 
+  // Share actions
   const shareOnWhatsApp = () => {
     if (!productUrl) return;
     const text = `Check out "${product.name}" on Art Plazaa! ${product.shortDescription || ''} ${productUrl}`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    
-    // Create a temporary link element
+
+    if (typeof document === 'undefined') return;
     const link = document.createElement('a');
     link.href = url;
     link.target = '_blank';
@@ -127,23 +128,22 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
     const subject = `Check out "${product.name}" on Art Plazaa`;
     const body = `I thought you might like this product from Art Plazaa:\n\n${product.name}\n\n${product.shortDescription || ''}\n\nView it here: ${productUrl}`;
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    // Open email client
+
     window.location.href = mailtoUrl;
   };
 
   const nativeShare = async () => {
     if (!productUrl || !hasNativeShare) return;
-    
+
     try {
-      await navigator.share({
+      await (navigator as any).share({
         title: product.name,
         text: product.shortDescription || 'Check out this amazing product!',
         url: productUrl,
       });
     } catch (error) {
-      // User cancelled or error
-      console.log('Share cancelled:', error);
+      // share cancelled or errored
+      // console.log('Share cancelled:', error);
     }
   };
 
@@ -152,7 +152,7 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
     window.open(productUrl, '_blank');
   };
 
-  // Show loading skeleton until client-side hydrated
+  // Loading skeleton for SSR/hydration
   if (!isClient) {
     return (
       <div className="pt-6 md:pt-8 border-t border-gray-200">
@@ -161,20 +161,18 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
             <Share2 className="w-5 h-5 mr-3 text-purple-600" />
             Share this product
           </h4>
-          <p className="text-sm text-gray-500">
-            Help others discover this amazing product!
-          </p>
+          <p className="text-sm text-gray-500">Help others discover this amazing product!</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <div className="h-10 w-24 bg-gray-100 animate-pulse rounded-lg"></div>
-          <div className="h-10 w-24 bg-gray-100 animate-pulse rounded-lg"></div>
-          <div className="h-10 w-24 bg-gray-100 animate-pulse rounded-lg"></div>
+          <div className="h-10 w-24 bg-gray-100 animate-pulse rounded-lg" />
+          <div className="h-10 w-24 bg-gray-100 animate-pulse rounded-lg" />
+          <div className="h-10 w-24 bg-gray-100 animate-pulse rounded-lg" />
         </div>
       </div>
     );
   }
 
-  // Once client-side hydrated, show the actual component
+  // Actual UI
   return (
     <div className="pt-6 md:pt-8 border-t border-gray-200">
       <div className="mb-4">
@@ -182,9 +180,7 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
           <Share2 className="w-5 h-5 mr-3 text-purple-600" />
           Share this product
         </h4>
-        <p className="text-sm text-gray-500">
-          Help others discover this amazing product!
-        </p>
+        <p className="text-sm text-gray-500">Help others discover this amazing product!</p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -244,14 +240,8 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
           title="Copy product link"
           type="button"
         >
-          {copied ? (
-            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-          ) : (
-            <Copy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-          )}
-          <span className="text-sm sm:text-base">
-            {copied ? 'Copied!' : 'Copy Link'}
-          </span>
+          {copied ? <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+          <span className="text-sm sm:text-base">{copied ? 'Copied!' : 'Copy Link'}</span>
         </button>
 
         {hasNativeShare && (
@@ -267,15 +257,13 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
         )}
       </div>
 
-      {/* URL Preview - Only show when productUrl is available */}
+      {/* URL Preview */}
       {productUrl && (
         <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-sm text-gray-600 mb-2">Product URL:</p>
           <div className="flex items-center">
             <div className="flex-1 bg-white border border-gray-300 rounded-l-lg px-3 py-2 overflow-hidden">
-              <code className="text-sm text-gray-700 truncate block font-mono">
-                {productUrl}
-              </code>
+              <code className="text-sm text-gray-700 truncate block font-mono">{productUrl}</code>
             </div>
             <button
               onClick={handleCopyLink}
@@ -296,7 +284,7 @@ export default function ShareButtons({ product }: ShareButtonsProps) {
         </div>
       )}
 
-      {/* Toast Notification */}
+      {/* Toast */}
       {copied && (
         <div className="fixed bottom-4 right-4 z-50 animate-fadeIn">
           <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center">
